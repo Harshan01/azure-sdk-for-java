@@ -1,8 +1,8 @@
-# Azure LoadTestClient client library for Java
+# Azure Developer LoadTesting client library for Java
 
-Azure LoadTestClient client library for Java.
+Azure Developer LoadTesting client library for Java.
 
-This package contains Microsoft Azure LoadTestClient client library.
+This package contains Microsoft Azure Developer LoadTesting client library.
 
 ## Documentation
 
@@ -34,6 +34,34 @@ Various documentation is available to help you get started
 
 [Azure Identity][azure_identity] package provides the default implementation for authenticating the client.
 
+By default, Azure Active Directory token authentication depends on correct configure of following environment variables.
+
+- `AZURE_CLIENT_ID` for Azure client ID.
+- `AZURE_TENANT_ID` for Azure tenant ID.
+- `AZURE_CLIENT_SECRET` or `AZURE_CLIENT_CERTIFICATE_PATH` for client secret or client certificate.
+
+In addition, Azure subscription ID can be configured via environment variable `AZURE_SUBSCRIPTION_ID`.
+
+With above configuration, `azure` client can be authenticated by following code:
+
+```java
+AzureProfile profile = new AzureProfile(AzureEnvironment.AZURE);
+TokenCredential credential = new DefaultAzureCredentialBuilder()
+    .authorityHost(profile.getEnvironment().getActiveDirectoryEndpoint())
+    .build();
+TestClientBuilder testClientBuilder = new TestClientBuilder();
+TestClient testClient = testClientBuilder
+    .credential(credential)
+    .endpoint("<Enter Azure Load Testing Data-Plane URL>")
+    .buildClient();
+```
+
+The sample code assumes global Azure. Please change `AzureEnvironment.AZURE` variable if otherwise.
+
+Authentication in this SDK is similar to Azure Management Libraries. See [Authentication][authenticate] for more options.
+
+An important distinction is that Azure Management libraries use `authenticate` method to accept credential along with Azure profile, where this SDK uses `credential` method and only accept the credential parameter.
+
 ## Key concepts
 
 ## Examples
@@ -61,3 +89,4 @@ For details on contributing to this repository, see the [contributing guide](htt
 [jdk]: https://docs.microsoft.com/java/azure/jdk/
 [azure_subscription]: https://azure.microsoft.com/free/
 [azure_identity]: https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/identity/azure-identity
+[authenticate]: https://github.com/Azure/azure-sdk-for-java/blob/main/sdk/resourcemanager/docs/AUTH.md
