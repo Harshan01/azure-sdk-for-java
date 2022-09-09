@@ -18,16 +18,14 @@ import com.azure.core.annotation.ReturnType;
 import com.azure.core.annotation.ServiceInterface;
 import com.azure.core.annotation.ServiceMethod;
 import com.azure.core.annotation.UnexpectedResponseExceptionType;
-import com.azure.core.exception.ClientAuthenticationException;
-import com.azure.core.exception.HttpResponseException;
-import com.azure.core.exception.ResourceModifiedException;
-import com.azure.core.exception.ResourceNotFoundException;
-import com.azure.core.http.rest.RequestOptions;
 import com.azure.core.http.rest.Response;
 import com.azure.core.http.rest.RestProxy;
-import com.azure.core.util.BinaryData;
 import com.azure.core.util.Context;
 import com.azure.core.util.FluxUtil;
+import com.azure.developer.loadtesting.models.DefaultServerMetricsConfigListModel;
+import com.azure.developer.loadtesting.models.ErrorResponseBodyException;
+import com.azure.developer.loadtesting.models.ServerMetricsModel;
+import com.azure.developer.loadtesting.models.SupportedResourceType;
 import reactor.core.publisher.Mono;
 
 /** An instance of this class provides access to all the operations defined in ServerMetrics. */
@@ -36,673 +34,660 @@ public final class ServerMetricsImpl {
     private final ServerMetricsService service;
 
     /** The service client containing this operation class. */
-    private final LoadTestClientImpl client;
+    private final AzureLoadTestingImpl client;
 
     /**
      * Initializes an instance of ServerMetricsImpl.
      *
      * @param client the instance of the service client containing this operation class.
      */
-    ServerMetricsImpl(LoadTestClientImpl client) {
+    ServerMetricsImpl(AzureLoadTestingImpl client) {
         this.service =
                 RestProxy.create(ServerMetricsService.class, client.getHttpPipeline(), client.getSerializerAdapter());
         this.client = client;
     }
 
     /**
-     * The interface defining all the services for LoadTestClientServerMetrics to be used by the proxy service to
+     * The interface defining all the services for AzureLoadTestingServerMetrics to be used by the proxy service to
      * perform REST calls.
      */
     @Host("https://{Endpoint}")
-    @ServiceInterface(name = "LoadTestClientServer")
-    private interface ServerMetricsService {
+    @ServiceInterface(name = "AzureLoadTestingServ")
+    public interface ServerMetricsService {
         @Patch("/serverMetricsConfig/{name}")
         @ExpectedResponses({200, 201})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> createOrUpdateServerMetricsConfig(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<ServerMetricsModel>> createOrUpdateServerMetricsConfig(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("name") String name,
                 @QueryParam("api-version") String apiVersion,
-                @BodyParam("application/merge-patch+json") BinaryData body,
+                @BodyParam("application/merge-patch+json") ServerMetricsModel body,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/serverMetricsConfig/{name}")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getServerMetricsByName(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<ServerMetricsModel>> getServerMetricsByName(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("name") String name,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Delete("/serverMetricsConfig/{name}")
         @ExpectedResponses({204})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
         Mono<Response<Void>> deleteServerMetrics(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("name") String name,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/serverMetricsConfig")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getServerMetrics(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<ServerMetricsModel>> getServerMetrics(
                 @HostParam("Endpoint") String endpoint,
+                @QueryParam("testRunId") String testRunId,
                 @QueryParam("api-version") String apiVersion,
+                @QueryParam("testId") String testId,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/serverMetricsConfig/default")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getServerDefaultMetrics(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<DefaultServerMetricsConfigListModel>> getServerDefaultMetrics(
                 @HostParam("Endpoint") String endpoint,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/serverMetricsConfig/supportedResourceTypes")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> listSupportedResourceType(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<SupportedResourceType>> listSupportedResourceType(
                 @HostParam("Endpoint") String endpoint,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
     }
 
     /**
      * Configure server metrics for a test or test run.
      *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     name: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     metrics (Optional): {
-     *         String (Optional): {
-     *             id: String (Optional)
-     *             resourceId: String (Required)
-     *             metricnamespace: String (Required)
-     *             displayDescription: String (Optional)
-     *             name (Required): {
-     *                 value: String (Required)
-     *                 localizedValue: String (Required)
-     *             }
-     *             aggregation: String (Required)
-     *             unit: String (Optional)
-     *             resourceType: String (Required)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     name: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     metrics (Optional): {
-     *         String (Optional): {
-     *             id: String (Optional)
-     *             resourceId: String (Required)
-     *             metricnamespace: String (Required)
-     *             displayDescription: String (Optional)
-     *             name (Required): {
-     *                 value: String (Required)
-     *                 localizedValue: String (Required)
-     *             }
-     *             aggregation: String (Required)
-     *             unit: String (Optional)
-     *             resourceType: String (Required)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
      * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body Server metrics configuration model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return server metrics config model along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> createOrUpdateServerMetricsConfigWithResponseAsync(
-            String name, BinaryData body, RequestOptions requestOptions) {
+    public Mono<Response<ServerMetricsModel>> createOrUpdateServerMetricsConfigWithResponseAsync(
+            String name, ServerMetricsModel body) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.createOrUpdateServerMetricsConfig(
-                                this.client.getEndpoint(),
-                                name,
-                                this.client.getServiceVersion().getVersion(),
-                                body,
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), name, this.client.getApiVersion(), body, accept, context));
     }
 
     /**
      * Configure server metrics for a test or test run.
      *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     name: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     metrics (Optional): {
-     *         String (Optional): {
-     *             id: String (Optional)
-     *             resourceId: String (Required)
-     *             metricnamespace: String (Required)
-     *             displayDescription: String (Optional)
-     *             name (Required): {
-     *                 value: String (Required)
-     *                 localizedValue: String (Required)
-     *             }
-     *             aggregation: String (Required)
-     *             unit: String (Optional)
-     *             resourceType: String (Required)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     name: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     metrics (Optional): {
-     *         String (Optional): {
-     *             id: String (Optional)
-     *             resourceId: String (Required)
-     *             metricnamespace: String (Required)
-     *             displayDescription: String (Optional)
-     *             name (Required): {
-     *                 value: String (Required)
-     *                 localizedValue: String (Required)
-     *             }
-     *             aggregation: String (Required)
-     *             unit: String (Optional)
-     *             resourceType: String (Required)
-     *         }
-     *     }
-     * }
-     * }</pre>
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Server metrics configuration model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics config model along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<ServerMetricsModel>> createOrUpdateServerMetricsConfigWithResponseAsync(
+            String name, ServerMetricsModel body, Context context) {
+        final String accept = "application/json";
+        return service.createOrUpdateServerMetricsConfig(
+                this.client.getEndpoint(), name, this.client.getApiVersion(), body, accept, context);
+    }
+
+    /**
+     * Configure server metrics for a test or test run.
      *
      * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body Server metrics configuration model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics config model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ServerMetricsModel> createOrUpdateServerMetricsConfigAsync(String name, ServerMetricsModel body) {
+        return createOrUpdateServerMetricsConfigWithResponseAsync(name, body)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Configure server metrics for a test or test run.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Server metrics configuration model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics config model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ServerMetricsModel> createOrUpdateServerMetricsConfigAsync(
+            String name, ServerMetricsModel body, Context context) {
+        return createOrUpdateServerMetricsConfigWithResponseAsync(name, body, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Configure server metrics for a test or test run.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Server metrics configuration model.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics config model.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public ServerMetricsModel createOrUpdateServerMetricsConfig(String name, ServerMetricsModel body) {
+        return createOrUpdateServerMetricsConfigAsync(name, body).block();
+    }
+
+    /**
+     * Configure server metrics for a test or test run.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Server metrics configuration model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return server metrics config model along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> createOrUpdateServerMetricsConfigWithResponse(
-            String name, BinaryData body, RequestOptions requestOptions) {
-        return createOrUpdateServerMetricsConfigWithResponseAsync(name, body, requestOptions).block();
+    public Response<ServerMetricsModel> createOrUpdateServerMetricsConfigWithResponse(
+            String name, ServerMetricsModel body, Context context) {
+        return createOrUpdateServerMetricsConfigWithResponseAsync(name, body, context).block();
     }
 
     /**
      * Get server metrics configuration by its name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     name: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     metrics (Optional): {
-     *         String (Optional): {
-     *             id: String (Optional)
-     *             resourceId: String (Required)
-     *             metricnamespace: String (Required)
-     *             displayDescription: String (Optional)
-     *             name (Required): {
-     *                 value: String (Required)
-     *                 localizedValue: String (Required)
-     *             }
-     *             aggregation: String (Required)
-     *             unit: String (Optional)
-     *             resourceType: String (Required)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
      * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return server metrics configuration by its name along with {@link Response} on successful completion of {@link
      *     Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getServerMetricsByNameWithResponseAsync(
-            String name, RequestOptions requestOptions) {
+    public Mono<Response<ServerMetricsModel>> getServerMetricsByNameWithResponseAsync(String name) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getServerMetricsByName(
-                                this.client.getEndpoint(),
-                                name,
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), name, this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Get server metrics configuration by its name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     name: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     metrics (Optional): {
-     *         String (Optional): {
-     *             id: String (Optional)
-     *             resourceId: String (Required)
-     *             metricnamespace: String (Required)
-     *             displayDescription: String (Optional)
-     *             name (Required): {
-     *                 value: String (Required)
-     *                 localizedValue: String (Required)
-     *             }
-     *             aggregation: String (Required)
-     *             unit: String (Optional)
-     *             resourceType: String (Required)
-     *         }
-     *     }
-     * }
-     * }</pre>
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics configuration by its name along with {@link Response} on successful completion of {@link
+     *     Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<ServerMetricsModel>> getServerMetricsByNameWithResponseAsync(String name, Context context) {
+        final String accept = "application/json";
+        return service.getServerMetricsByName(
+                this.client.getEndpoint(), name, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Get server metrics configuration by its name.
      *
      * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics configuration by its name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ServerMetricsModel> getServerMetricsByNameAsync(String name) {
+        return getServerMetricsByNameWithResponseAsync(name).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get server metrics configuration by its name.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics configuration by its name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ServerMetricsModel> getServerMetricsByNameAsync(String name, Context context) {
+        return getServerMetricsByNameWithResponseAsync(name, context).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get server metrics configuration by its name.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics configuration by its name.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public ServerMetricsModel getServerMetricsByName(String name) {
+        return getServerMetricsByNameAsync(name).block();
+    }
+
+    /**
+     * Get server metrics configuration by its name.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return server metrics configuration by its name along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getServerMetricsByNameWithResponse(String name, RequestOptions requestOptions) {
-        return getServerMetricsByNameWithResponseAsync(name, requestOptions).block();
+    public Response<ServerMetricsModel> getServerMetricsByNameWithResponse(String name, Context context) {
+        return getServerMetricsByNameWithResponseAsync(name, context).block();
     }
 
     /**
      * Delete server metrics configuration by its name.
      *
      * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<Void>> deleteServerMetricsWithResponseAsync(String name, RequestOptions requestOptions) {
+    public Mono<Response<Void>> deleteServerMetricsWithResponseAsync(String name) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.deleteServerMetrics(
-                                this.client.getEndpoint(),
-                                name,
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), name, this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Delete server metrics configuration by its name.
      *
      * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<Void>> deleteServerMetricsWithResponseAsync(String name, Context context) {
+        final String accept = "application/json";
+        return service.deleteServerMetrics(
+                this.client.getEndpoint(), name, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Delete server metrics configuration by its name.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteServerMetricsAsync(String name) {
+        return deleteServerMetricsWithResponseAsync(name).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete server metrics configuration by its name.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteServerMetricsAsync(String name, Context context) {
+        return deleteServerMetricsWithResponseAsync(name, context).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete server metrics configuration by its name.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void deleteServerMetrics(String name) {
+        deleteServerMetricsAsync(name).block();
+    }
+
+    /**
+     * Delete server metrics configuration by its name.
+     *
+     * @param name Unique name for server metrics, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> deleteServerMetricsWithResponse(String name, RequestOptions requestOptions) {
-        return deleteServerMetricsWithResponseAsync(name, requestOptions).block();
+    public Response<Void> deleteServerMetricsWithResponse(String name, Context context) {
+        return deleteServerMetricsWithResponseAsync(name, context).block();
     }
 
     /**
      * Get server metrics configuration for a test or test run by its name.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>testRunId</td><td>String</td><td>No</td><td>[Required, if testId is not provided] Test run Id.</td></tr>
-     *     <tr><td>testId</td><td>String</td><td>No</td><td>Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     name: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     metrics (Optional): {
-     *         String (Optional): {
-     *             id: String (Optional)
-     *             resourceId: String (Required)
-     *             metricnamespace: String (Required)
-     *             displayDescription: String (Optional)
-     *             name (Required): {
-     *                 value: String (Required)
-     *                 localizedValue: String (Required)
-     *             }
-     *             aggregation: String (Required)
-     *             unit: String (Optional)
-     *             resourceType: String (Required)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return server metrics configuration for a test or test run by its name along with {@link Response} on successful
      *     completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getServerMetricsWithResponseAsync(RequestOptions requestOptions) {
+    public Mono<Response<ServerMetricsModel>> getServerMetricsWithResponseAsync(String testRunId, String testId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getServerMetrics(
                                 this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
+                                testRunId,
+                                this.client.getApiVersion(),
+                                testId,
                                 accept,
-                                requestOptions,
                                 context));
     }
 
     /**
      * Get server metrics configuration for a test or test run by its name.
      *
-     * <p><strong>Query Parameters</strong>
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics configuration for a test or test run by its name along with {@link Response} on successful
+     *     completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<ServerMetricsModel>> getServerMetricsWithResponseAsync(
+            String testRunId, String testId, Context context) {
+        final String accept = "application/json";
+        return service.getServerMetrics(
+                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), testId, accept, context);
+    }
+
+    /**
+     * Get server metrics configuration for a test or test run by its name.
      *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>testRunId</td><td>String</td><td>No</td><td>[Required, if testId is not provided] Test run Id.</td></tr>
-     *     <tr><td>testId</td><td>String</td><td>No</td><td>Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.</td></tr>
-     * </table>
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics configuration for a test or test run by its name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ServerMetricsModel> getServerMetricsAsync(String testRunId, String testId) {
+        return getServerMetricsWithResponseAsync(testRunId, testId).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get server metrics configuration for a test or test run by its name.
      *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics configuration for a test or test run by its name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ServerMetricsModel> getServerMetricsAsync(String testRunId, String testId, Context context) {
+        return getServerMetricsWithResponseAsync(testRunId, testId, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get server metrics configuration for a test or test run by its name.
      *
-     * <p><strong>Response Body Schema</strong>
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return server metrics configuration for a test or test run by its name.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public ServerMetricsModel getServerMetrics(String testRunId, String testId) {
+        return getServerMetricsAsync(testRunId, testId).block();
+    }
+
+    /**
+     * Get server metrics configuration for a test or test run by its name.
      *
-     * <pre>{@code
-     * {
-     *     name: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     metrics (Optional): {
-     *         String (Optional): {
-     *             id: String (Optional)
-     *             resourceId: String (Required)
-     *             metricnamespace: String (Required)
-     *             displayDescription: String (Optional)
-     *             name (Required): {
-     *                 value: String (Required)
-     *                 localizedValue: String (Required)
-     *             }
-     *             aggregation: String (Required)
-     *             unit: String (Optional)
-     *             resourceType: String (Required)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return server metrics configuration for a test or test run by its name along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getServerMetricsWithResponse(RequestOptions requestOptions) {
-        return getServerMetricsWithResponseAsync(requestOptions).block();
+    public Response<ServerMetricsModel> getServerMetricsWithResponse(String testRunId, String testId, Context context) {
+        return getServerMetricsWithResponseAsync(testRunId, testId, context).block();
     }
 
     /**
      * Get all default server metrics configuration for supported resource types.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     defaultMetrics (Optional): {
-     *         String (Optional): [
-     *              (Optional){
-     *                 metricnamespace: String (Optional)
-     *                 aggregation: String (Optional)
-     *                 name (Optional): {
-     *                     value: String (Optional)
-     *                     localizedValue: String (Optional)
-     *                 }
-     *                 unit: String (Optional)
-     *                 displayDescription: String (Optional)
-     *             }
-     *         ]
-     *     }
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all default server metrics configuration for supported resource types along with {@link Response} on
      *     successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getServerDefaultMetricsWithResponseAsync(RequestOptions requestOptions) {
+    public Mono<Response<DefaultServerMetricsConfigListModel>> getServerDefaultMetricsWithResponseAsync() {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getServerDefaultMetrics(
-                                this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Get all default server metrics configuration for supported resource types.
      *
-     * <p><strong>Response Body Schema</strong>
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all default server metrics configuration for supported resource types along with {@link Response} on
+     *     successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<DefaultServerMetricsConfigListModel>> getServerDefaultMetricsWithResponseAsync(
+            Context context) {
+        final String accept = "application/json";
+        return service.getServerDefaultMetrics(this.client.getEndpoint(), this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Get all default server metrics configuration for supported resource types.
      *
-     * <pre>{@code
-     * {
-     *     defaultMetrics (Optional): {
-     *         String (Optional): [
-     *              (Optional){
-     *                 metricnamespace: String (Optional)
-     *                 aggregation: String (Optional)
-     *                 name (Optional): {
-     *                     value: String (Optional)
-     *                     localizedValue: String (Optional)
-     *                 }
-     *                 unit: String (Optional)
-     *                 displayDescription: String (Optional)
-     *             }
-     *         ]
-     *     }
-     * }
-     * }</pre>
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all default server metrics configuration for supported resource types on successful completion of {@link
+     *     Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<DefaultServerMetricsConfigListModel> getServerDefaultMetricsAsync() {
+        return getServerDefaultMetricsWithResponseAsync().flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all default server metrics configuration for supported resource types.
      *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all default server metrics configuration for supported resource types on successful completion of {@link
+     *     Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<DefaultServerMetricsConfigListModel> getServerDefaultMetricsAsync(Context context) {
+        return getServerDefaultMetricsWithResponseAsync(context).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all default server metrics configuration for supported resource types.
+     *
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all default server metrics configuration for supported resource types.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public DefaultServerMetricsConfigListModel getServerDefaultMetrics() {
+        return getServerDefaultMetricsAsync().block();
+    }
+
+    /**
+     * Get all default server metrics configuration for supported resource types.
+     *
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all default server metrics configuration for supported resource types along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getServerDefaultMetricsWithResponse(RequestOptions requestOptions) {
-        return getServerDefaultMetricsWithResponseAsync(requestOptions).block();
+    public Response<DefaultServerMetricsConfigListModel> getServerDefaultMetricsWithResponse(Context context) {
+        return getServerDefaultMetricsWithResponseAsync(context).block();
     }
 
     /**
      * Get all supported resource types for App Components(Azure resource types).
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     value (Optional): [
-     *         String (Optional)
-     *     ]
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all supported resource types for App Components(Azure resource types) along with {@link Response} on
      *     successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> listSupportedResourceTypeWithResponseAsync(RequestOptions requestOptions) {
+    public Mono<Response<SupportedResourceType>> listSupportedResourceTypeWithResponseAsync() {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.listSupportedResourceType(
-                                this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Get all supported resource types for App Components(Azure resource types).
      *
-     * <p><strong>Response Body Schema</strong>
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all supported resource types for App Components(Azure resource types) along with {@link Response} on
+     *     successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<SupportedResourceType>> listSupportedResourceTypeWithResponseAsync(Context context) {
+        final String accept = "application/json";
+        return service.listSupportedResourceType(
+                this.client.getEndpoint(), this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Get all supported resource types for App Components(Azure resource types).
      *
-     * <pre>{@code
-     * {
-     *     value (Optional): [
-     *         String (Optional)
-     *     ]
-     * }
-     * }</pre>
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all supported resource types for App Components(Azure resource types) on successful completion of {@link
+     *     Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<SupportedResourceType> listSupportedResourceTypeAsync() {
+        return listSupportedResourceTypeWithResponseAsync().flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all supported resource types for App Components(Azure resource types).
      *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all supported resource types for App Components(Azure resource types) on successful completion of {@link
+     *     Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<SupportedResourceType> listSupportedResourceTypeAsync(Context context) {
+        return listSupportedResourceTypeWithResponseAsync(context).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all supported resource types for App Components(Azure resource types).
+     *
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all supported resource types for App Components(Azure resource types).
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public SupportedResourceType listSupportedResourceType() {
+        return listSupportedResourceTypeAsync().block();
+    }
+
+    /**
+     * Get all supported resource types for App Components(Azure resource types).
+     *
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all supported resource types for App Components(Azure resource types) along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> listSupportedResourceTypeWithResponse(RequestOptions requestOptions) {
-        return listSupportedResourceTypeWithResponseAsync(requestOptions).block();
+    public Response<SupportedResourceType> listSupportedResourceTypeWithResponse(Context context) {
+        return listSupportedResourceTypeWithResponseAsync(context).block();
     }
 }

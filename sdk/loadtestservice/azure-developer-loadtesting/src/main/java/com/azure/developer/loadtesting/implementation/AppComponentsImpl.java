@@ -18,16 +18,12 @@ import com.azure.core.annotation.ReturnType;
 import com.azure.core.annotation.ServiceInterface;
 import com.azure.core.annotation.ServiceMethod;
 import com.azure.core.annotation.UnexpectedResponseExceptionType;
-import com.azure.core.exception.ClientAuthenticationException;
-import com.azure.core.exception.HttpResponseException;
-import com.azure.core.exception.ResourceModifiedException;
-import com.azure.core.exception.ResourceNotFoundException;
-import com.azure.core.http.rest.RequestOptions;
 import com.azure.core.http.rest.Response;
 import com.azure.core.http.rest.RestProxy;
-import com.azure.core.util.BinaryData;
 import com.azure.core.util.Context;
 import com.azure.core.util.FluxUtil;
+import com.azure.developer.loadtesting.models.AppComponentsMap;
+import com.azure.developer.loadtesting.models.ErrorResponseBodyException;
 import reactor.core.publisher.Mono;
 
 /** An instance of this class provides access to all the operations defined in AppComponents. */
@@ -36,471 +32,466 @@ public final class AppComponentsImpl {
     private final AppComponentsService service;
 
     /** The service client containing this operation class. */
-    private final LoadTestClientImpl client;
+    private final AzureLoadTestingImpl client;
 
     /**
      * Initializes an instance of AppComponentsImpl.
      *
      * @param client the instance of the service client containing this operation class.
      */
-    AppComponentsImpl(LoadTestClientImpl client) {
+    AppComponentsImpl(AzureLoadTestingImpl client) {
         this.service =
                 RestProxy.create(AppComponentsService.class, client.getHttpPipeline(), client.getSerializerAdapter());
         this.client = client;
     }
 
     /**
-     * The interface defining all the services for LoadTestClientAppComponents to be used by the proxy service to
+     * The interface defining all the services for AzureLoadTestingAppComponents to be used by the proxy service to
      * perform REST calls.
      */
     @Host("https://{Endpoint}")
-    @ServiceInterface(name = "LoadTestClientAppCom")
-    private interface AppComponentsService {
+    @ServiceInterface(name = "AzureLoadTestingAppC")
+    public interface AppComponentsService {
         @Patch("/appcomponents/{name}")
         @ExpectedResponses({200, 201})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> createOrUpdateAppComponents(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<AppComponentsMap>> createOrUpdateAppComponents(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("name") String name,
                 @QueryParam("api-version") String apiVersion,
-                @BodyParam("application/merge-patch+json") BinaryData body,
+                @BodyParam("application/merge-patch+json") AppComponentsMap body,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Delete("/appcomponents/{name}")
         @ExpectedResponses({204})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
         Mono<Response<Void>> deleteAppComponent(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("name") String name,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/appcomponents/{name}")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getAppComponentByName(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<AppComponentsMap>> getAppComponentByName(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("name") String name,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/appcomponents")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getAppComponent(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<AppComponentsMap>> getAppComponent(
                 @HostParam("Endpoint") String endpoint,
+                @QueryParam("testRunId") String testRunId,
                 @QueryParam("api-version") String apiVersion,
+                @QueryParam("testId") String testId,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
     }
 
     /**
      * Associate an App Component (Azure resource) to a test or test run.
      *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     resourceId: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     name: String (Optional)
-     *     value (Required): {
-     *         String (Required): {
-     *             resourceId: String (Required)
-     *             resourceName: String (Required)
-     *             resourceType: String (Required)
-     *             displayName: String (Optional)
-     *             resourceGroup: String (Optional)
-     *             subscriptionId: String (Optional)
-     *             kind: String (Optional)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     resourceId: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     name: String (Optional)
-     *     value (Required): {
-     *         String (Required): {
-     *             resourceId: String (Required)
-     *             resourceName: String (Required)
-     *             resourceType: String (Required)
-     *             displayName: String (Optional)
-     *             resourceGroup: String (Optional)
-     *             subscriptionId: String (Optional)
-     *             kind: String (Optional)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
      * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body App Component model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return app Components model along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> createOrUpdateAppComponentsWithResponseAsync(
-            String name, BinaryData body, RequestOptions requestOptions) {
+    public Mono<Response<AppComponentsMap>> createOrUpdateAppComponentsWithResponseAsync(
+            String name, AppComponentsMap body) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.createOrUpdateAppComponents(
-                                this.client.getEndpoint(),
-                                name,
-                                this.client.getServiceVersion().getVersion(),
-                                body,
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), name, this.client.getApiVersion(), body, accept, context));
     }
 
     /**
      * Associate an App Component (Azure resource) to a test or test run.
      *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     resourceId: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     name: String (Optional)
-     *     value (Required): {
-     *         String (Required): {
-     *             resourceId: String (Required)
-     *             resourceName: String (Required)
-     *             resourceType: String (Required)
-     *             displayName: String (Optional)
-     *             resourceGroup: String (Optional)
-     *             subscriptionId: String (Optional)
-     *             kind: String (Optional)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     resourceId: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     name: String (Optional)
-     *     value (Required): {
-     *         String (Required): {
-     *             resourceId: String (Required)
-     *             resourceName: String (Required)
-     *             resourceType: String (Required)
-     *             displayName: String (Optional)
-     *             resourceGroup: String (Optional)
-     *             subscriptionId: String (Optional)
-     *             kind: String (Optional)
-     *         }
-     *     }
-     * }
-     * }</pre>
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body App Component model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Components model along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<AppComponentsMap>> createOrUpdateAppComponentsWithResponseAsync(
+            String name, AppComponentsMap body, Context context) {
+        final String accept = "application/json";
+        return service.createOrUpdateAppComponents(
+                this.client.getEndpoint(), name, this.client.getApiVersion(), body, accept, context);
+    }
+
+    /**
+     * Associate an App Component (Azure resource) to a test or test run.
      *
      * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body App Component model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Components model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<AppComponentsMap> createOrUpdateAppComponentsAsync(String name, AppComponentsMap body) {
+        return createOrUpdateAppComponentsWithResponseAsync(name, body)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Associate an App Component (Azure resource) to a test or test run.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body App Component model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Components model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<AppComponentsMap> createOrUpdateAppComponentsAsync(
+            String name, AppComponentsMap body, Context context) {
+        return createOrUpdateAppComponentsWithResponseAsync(name, body, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Associate an App Component (Azure resource) to a test or test run.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body App Component model.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Components model.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public AppComponentsMap createOrUpdateAppComponents(String name, AppComponentsMap body) {
+        return createOrUpdateAppComponentsAsync(name, body).block();
+    }
+
+    /**
+     * Associate an App Component (Azure resource) to a test or test run.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body App Component model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return app Components model along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> createOrUpdateAppComponentsWithResponse(
-            String name, BinaryData body, RequestOptions requestOptions) {
-        return createOrUpdateAppComponentsWithResponseAsync(name, body, requestOptions).block();
+    public Response<AppComponentsMap> createOrUpdateAppComponentsWithResponse(
+            String name, AppComponentsMap body, Context context) {
+        return createOrUpdateAppComponentsWithResponseAsync(name, body, context).block();
     }
 
     /**
      * Delete an App Component.
      *
      * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<Void>> deleteAppComponentWithResponseAsync(String name, RequestOptions requestOptions) {
+    public Mono<Response<Void>> deleteAppComponentWithResponseAsync(String name) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.deleteAppComponent(
-                                this.client.getEndpoint(),
-                                name,
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), name, this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Delete an App Component.
      *
      * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<Void>> deleteAppComponentWithResponseAsync(String name, Context context) {
+        final String accept = "application/json";
+        return service.deleteAppComponent(
+                this.client.getEndpoint(), name, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Delete an App Component.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteAppComponentAsync(String name) {
+        return deleteAppComponentWithResponseAsync(name).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete an App Component.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteAppComponentAsync(String name, Context context) {
+        return deleteAppComponentWithResponseAsync(name, context).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete an App Component.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void deleteAppComponent(String name) {
+        deleteAppComponentAsync(name).block();
+    }
+
+    /**
+     * Delete an App Component.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> deleteAppComponentWithResponse(String name, RequestOptions requestOptions) {
-        return deleteAppComponentWithResponseAsync(name, requestOptions).block();
+    public Response<Void> deleteAppComponentWithResponse(String name, Context context) {
+        return deleteAppComponentWithResponseAsync(name, context).block();
     }
 
     /**
      * Get App Component details by App Component name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     resourceId: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     name: String (Optional)
-     *     value (Required): {
-     *         String (Required): {
-     *             resourceId: String (Required)
-     *             resourceName: String (Required)
-     *             resourceType: String (Required)
-     *             displayName: String (Optional)
-     *             resourceGroup: String (Optional)
-     *             subscriptionId: String (Optional)
-     *             kind: String (Optional)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
      * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return app Component details by App Component name along with {@link Response} on successful completion of
      *     {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getAppComponentByNameWithResponseAsync(
-            String name, RequestOptions requestOptions) {
+    public Mono<Response<AppComponentsMap>> getAppComponentByNameWithResponseAsync(String name) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getAppComponentByName(
-                                this.client.getEndpoint(),
-                                name,
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), name, this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Get App Component details by App Component name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     resourceId: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     name: String (Optional)
-     *     value (Required): {
-     *         String (Required): {
-     *             resourceId: String (Required)
-     *             resourceName: String (Required)
-     *             resourceType: String (Required)
-     *             displayName: String (Optional)
-     *             resourceGroup: String (Optional)
-     *             subscriptionId: String (Optional)
-     *             kind: String (Optional)
-     *         }
-     *     }
-     * }
-     * }</pre>
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Component details by App Component name along with {@link Response} on successful completion of
+     *     {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<AppComponentsMap>> getAppComponentByNameWithResponseAsync(String name, Context context) {
+        final String accept = "application/json";
+        return service.getAppComponentByName(
+                this.client.getEndpoint(), name, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Get App Component details by App Component name.
      *
      * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Component details by App Component name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<AppComponentsMap> getAppComponentByNameAsync(String name) {
+        return getAppComponentByNameWithResponseAsync(name).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get App Component details by App Component name.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Component details by App Component name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<AppComponentsMap> getAppComponentByNameAsync(String name, Context context) {
+        return getAppComponentByNameWithResponseAsync(name, context).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get App Component details by App Component name.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Component details by App Component name.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public AppComponentsMap getAppComponentByName(String name) {
+        return getAppComponentByNameAsync(name).block();
+    }
+
+    /**
+     * Get App Component details by App Component name.
+     *
+     * @param name Unique name of the App Component, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return app Component details by App Component name along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getAppComponentByNameWithResponse(String name, RequestOptions requestOptions) {
-        return getAppComponentByNameWithResponseAsync(name, requestOptions).block();
+    public Response<AppComponentsMap> getAppComponentByNameWithResponse(String name, Context context) {
+        return getAppComponentByNameWithResponseAsync(name, context).block();
     }
 
     /**
      * Get App Components for a test or a test run by its name.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>testRunId</td><td>String</td><td>No</td><td>[Required, if testId is not provided] Test run Id.</td></tr>
-     *     <tr><td>testId</td><td>String</td><td>No</td><td>Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     resourceId: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     name: String (Optional)
-     *     value (Required): {
-     *         String (Required): {
-     *             resourceId: String (Required)
-     *             resourceName: String (Required)
-     *             resourceType: String (Required)
-     *             displayName: String (Optional)
-     *             resourceGroup: String (Optional)
-     *             subscriptionId: String (Optional)
-     *             kind: String (Optional)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return app Components for a test or a test run by its name along with {@link Response} on successful completion
      *     of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getAppComponentWithResponseAsync(RequestOptions requestOptions) {
+    public Mono<Response<AppComponentsMap>> getAppComponentWithResponseAsync(String testRunId, String testId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getAppComponent(
                                 this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
+                                testRunId,
+                                this.client.getApiVersion(),
+                                testId,
                                 accept,
-                                requestOptions,
                                 context));
     }
 
     /**
      * Get App Components for a test or a test run by its name.
      *
-     * <p><strong>Query Parameters</strong>
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Components for a test or a test run by its name along with {@link Response} on successful completion
+     *     of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<AppComponentsMap>> getAppComponentWithResponseAsync(
+            String testRunId, String testId, Context context) {
+        final String accept = "application/json";
+        return service.getAppComponent(
+                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), testId, accept, context);
+    }
+
+    /**
+     * Get App Components for a test or a test run by its name.
      *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>testRunId</td><td>String</td><td>No</td><td>[Required, if testId is not provided] Test run Id.</td></tr>
-     *     <tr><td>testId</td><td>String</td><td>No</td><td>Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.</td></tr>
-     * </table>
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Components for a test or a test run by its name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<AppComponentsMap> getAppComponentAsync(String testRunId, String testId) {
+        return getAppComponentWithResponseAsync(testRunId, testId).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get App Components for a test or a test run by its name.
      *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Components for a test or a test run by its name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<AppComponentsMap> getAppComponentAsync(String testRunId, String testId, Context context) {
+        return getAppComponentWithResponseAsync(testRunId, testId, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get App Components for a test or a test run by its name.
      *
-     * <p><strong>Response Body Schema</strong>
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return app Components for a test or a test run by its name.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public AppComponentsMap getAppComponent(String testRunId, String testId) {
+        return getAppComponentAsync(testRunId, testId).block();
+    }
+
+    /**
+     * Get App Components for a test or a test run by its name.
      *
-     * <pre>{@code
-     * {
-     *     resourceId: String (Optional)
-     *     testId: String (Optional)
-     *     testRunId: String (Optional)
-     *     name: String (Optional)
-     *     value (Required): {
-     *         String (Required): {
-     *             resourceId: String (Required)
-     *             resourceName: String (Required)
-     *             resourceType: String (Required)
-     *             displayName: String (Optional)
-     *             resourceGroup: String (Optional)
-     *             subscriptionId: String (Optional)
-     *             kind: String (Optional)
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param testRunId [Required, if testId is not provided] Test run Id.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return app Components for a test or a test run by its name along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getAppComponentWithResponse(RequestOptions requestOptions) {
-        return getAppComponentWithResponseAsync(requestOptions).block();
+    public Response<AppComponentsMap> getAppComponentWithResponse(String testRunId, String testId, Context context) {
+        return getAppComponentWithResponseAsync(testRunId, testId, context).block();
     }
 }

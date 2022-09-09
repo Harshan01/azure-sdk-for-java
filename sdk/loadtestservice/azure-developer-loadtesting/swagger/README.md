@@ -1,20 +1,18 @@
 ## Generate autorest code
 
 ```yaml
-require: https://github.com/Azure/azure-rest-api-specs/blob/9401446f22177696d920cf110893a0de7452ee9e/specification/loadtestservice/data-plane/readme.md
-output-folder: ../
+input-file: https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/loadtestservice/data-plane/Microsoft.LoadTestService/preview/2022-06-01-preview/loadtestservice.json
 java: true
-regenerate-pom: false
-title: LoadTestClient
-security: AADToken
-security-scopes: https://loadtest.azure-dev.com/.default
-data-plane: true
-generate-tests: true
-generate-models: true
-artifact-id: azure-developer-loadtesting
-generate-samples: true
+output-folder: ..\
+generate-client-as-impl: true
 namespace: com.azure.developer.loadtesting
-partial-update: true
-service-versions:
-- 2022-06-01-preview
+generate-client-interfaces: false
+sync-methods: all
+license-header: MICROSOFT_MIT_SMALL
+add-context-parameter: true
+context-client-method-parameter: true
+service-interface-as-public: true
+custom-strongly-typed-header-deserialization: true
+generic-response-type: true
+custom-types-subpackage: models
 ```

@@ -19,16 +19,19 @@ import com.azure.core.annotation.ReturnType;
 import com.azure.core.annotation.ServiceInterface;
 import com.azure.core.annotation.ServiceMethod;
 import com.azure.core.annotation.UnexpectedResponseExceptionType;
-import com.azure.core.exception.ClientAuthenticationException;
-import com.azure.core.exception.HttpResponseException;
-import com.azure.core.exception.ResourceModifiedException;
-import com.azure.core.exception.ResourceNotFoundException;
-import com.azure.core.http.rest.RequestOptions;
 import com.azure.core.http.rest.Response;
 import com.azure.core.http.rest.RestProxy;
 import com.azure.core.util.BinaryData;
 import com.azure.core.util.Context;
 import com.azure.core.util.FluxUtil;
+import com.azure.developer.loadtesting.models.ErrorResponseBodyException;
+import com.azure.developer.loadtesting.models.FileUrl;
+import com.azure.developer.loadtesting.models.FileUrlList;
+import com.azure.developer.loadtesting.models.TestModel;
+import com.azure.developer.loadtesting.models.TestModelResourceList;
+import java.nio.ByteBuffer;
+import java.time.OffsetDateTime;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /** An instance of this class provides access to all the operations defined in Tests. */
@@ -37,789 +40,459 @@ public final class TestsImpl {
     private final TestsService service;
 
     /** The service client containing this operation class. */
-    private final LoadTestClientImpl client;
+    private final AzureLoadTestingImpl client;
 
     /**
      * Initializes an instance of TestsImpl.
      *
      * @param client the instance of the service client containing this operation class.
      */
-    TestsImpl(LoadTestClientImpl client) {
+    TestsImpl(AzureLoadTestingImpl client) {
         this.service = RestProxy.create(TestsService.class, client.getHttpPipeline(), client.getSerializerAdapter());
         this.client = client;
     }
 
     /**
-     * The interface defining all the services for LoadTestClientTests to be used by the proxy service to perform REST
+     * The interface defining all the services for AzureLoadTestingTests to be used by the proxy service to perform REST
      * calls.
      */
     @Host("https://{Endpoint}")
-    @ServiceInterface(name = "LoadTestClientTests")
-    private interface TestsService {
+    @ServiceInterface(name = "AzureLoadTestingTest")
+    public interface TestsService {
         @Patch("/loadtests/{testId}")
         @ExpectedResponses({200, 201})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> createOrUpdateTest(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<TestModel>> createOrUpdateTest(
                 @HostParam("Endpoint") String endpoint,
                 @QueryParam("api-version") String apiVersion,
                 @PathParam("testId") String testId,
-                @BodyParam("application/merge-patch+json") BinaryData body,
+                @BodyParam("application/merge-patch+json") TestModel body,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Delete("/loadtests/{testId}")
         @ExpectedResponses({204})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
         Mono<Response<Void>> deleteLoadTest(
                 @HostParam("Endpoint") String endpoint,
                 @QueryParam("api-version") String apiVersion,
                 @PathParam("testId") String testId,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/loadtests/{testId}")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getLoadTest(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<TestModel>> getLoadTest(
                 @HostParam("Endpoint") String endpoint,
                 @QueryParam("api-version") String apiVersion,
                 @PathParam("testId") String testId,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/loadtests/sortAndFilter")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> listLoadTestSearch(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<TestModelResourceList>> listLoadTestSearch(
                 @HostParam("Endpoint") String endpoint,
+                @QueryParam("orderBy") String orderBy,
+                @QueryParam("search") String search,
+                @QueryParam("lastUpdatedStartTime") OffsetDateTime lastUpdatedStartTime,
+                @QueryParam("lastUpdatedEndTime") OffsetDateTime lastUpdatedEndTime,
+                @QueryParam("continuationToken") String continuationToken,
+                @QueryParam("maxPageSize") Integer maxPageSize,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         // @Multipart not supported by RestProxy
         @Put("/loadtests/{testId}/files/{fileId}")
         @ExpectedResponses({201})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> uploadTestFile(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<FileUrl>> uploadTestFile(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testId") String testId,
                 @PathParam("fileId") String fileId,
+                @QueryParam("fileType") Integer fileType,
+                @QueryParam("api-version") String apiVersion,
+                @BodyParam("multipart/form-data") Flux<ByteBuffer> file,
+                @HeaderParam("Content-Length") long contentLength,
+                @HeaderParam("Accept") String accept,
+                Context context);
+
+        // @Multipart not supported by RestProxy
+        @Put("/loadtests/{testId}/files/{fileId}")
+        @ExpectedResponses({201})
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<FileUrl>> uploadTestFile(
+                @HostParam("Endpoint") String endpoint,
+                @PathParam("testId") String testId,
+                @PathParam("fileId") String fileId,
+                @QueryParam("fileType") Integer fileType,
                 @QueryParam("api-version") String apiVersion,
                 @BodyParam("multipart/form-data") BinaryData file,
+                @HeaderParam("Content-Length") long contentLength,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/loadtests/{testId}/files/{fileId}")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getTestFile(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<FileUrl>> getTestFile(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testId") String testId,
                 @PathParam("fileId") String fileId,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Delete("/loadtests/{testId}/files/{fileId}")
         @ExpectedResponses({204})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
         Mono<Response<Void>> deleteTestFile(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testId") String testId,
                 @PathParam("fileId") String fileId,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/loadtests/{testId}/files")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getAllTestFiles(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<FileUrlList>> getAllTestFiles(
                 @HostParam("Endpoint") String endpoint,
                 @QueryParam("api-version") String apiVersion,
                 @PathParam("testId") String testId,
+                @QueryParam("continuationToken") String continuationToken,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
     }
 
     /**
      * Create a new test or Update an existing test.
      *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testId: String (Optional)
-     *     description: String (Optional)
-     *     displayName: String (Optional)
-     *     resourceId: String (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     inputArtifacts (Optional): {
-     *         configUrl (Optional): {
-     *             url: String (Optional)
-     *             fileId: String (Optional)
-     *             filename: String (Optional)
-     *             fileType: String(0/1/2) (Optional)
-     *             expireTime: OffsetDateTime (Optional)
-     *             validationStatus: String (Optional)
-     *         }
-     *         testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *         userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *         inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *         additionalUrls (Optional): [
-     *             (recursive schema, see above)
-     *         ]
-     *     }
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     subnetId: String (Optional)
-     *     keyvaultReferenceIdentityType: String (Optional)
-     *     keyvaultReferenceIdentityId: String (Optional)
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testId: String (Optional)
-     *     description: String (Optional)
-     *     displayName: String (Optional)
-     *     resourceId: String (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     inputArtifacts (Optional): {
-     *         configUrl (Optional): {
-     *             url: String (Optional)
-     *             fileId: String (Optional)
-     *             filename: String (Optional)
-     *             fileType: String(0/1/2) (Optional)
-     *             expireTime: OffsetDateTime (Optional)
-     *             validationStatus: String (Optional)
-     *         }
-     *         testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *         userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *         inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *         additionalUrls (Optional): [
-     *             (recursive schema, see above)
-     *         ]
-     *     }
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     subnetId: String (Optional)
-     *     keyvaultReferenceIdentityType: String (Optional)
-     *     keyvaultReferenceIdentityId: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body Load test model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return load test model along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> createOrUpdateTestWithResponseAsync(
-            String testId, BinaryData body, RequestOptions requestOptions) {
+    public Mono<Response<TestModel>> createOrUpdateTestWithResponseAsync(String testId, TestModel body) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.createOrUpdateTest(
-                                this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
-                                testId,
-                                body,
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), this.client.getApiVersion(), testId, body, accept, context));
     }
 
     /**
      * Create a new test or Update an existing test.
      *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testId: String (Optional)
-     *     description: String (Optional)
-     *     displayName: String (Optional)
-     *     resourceId: String (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     inputArtifacts (Optional): {
-     *         configUrl (Optional): {
-     *             url: String (Optional)
-     *             fileId: String (Optional)
-     *             filename: String (Optional)
-     *             fileType: String(0/1/2) (Optional)
-     *             expireTime: OffsetDateTime (Optional)
-     *             validationStatus: String (Optional)
-     *         }
-     *         testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *         userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *         inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *         additionalUrls (Optional): [
-     *             (recursive schema, see above)
-     *         ]
-     *     }
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     subnetId: String (Optional)
-     *     keyvaultReferenceIdentityType: String (Optional)
-     *     keyvaultReferenceIdentityId: String (Optional)
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testId: String (Optional)
-     *     description: String (Optional)
-     *     displayName: String (Optional)
-     *     resourceId: String (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     inputArtifacts (Optional): {
-     *         configUrl (Optional): {
-     *             url: String (Optional)
-     *             fileId: String (Optional)
-     *             filename: String (Optional)
-     *             fileType: String(0/1/2) (Optional)
-     *             expireTime: OffsetDateTime (Optional)
-     *             validationStatus: String (Optional)
-     *         }
-     *         testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *         userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *         inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *         additionalUrls (Optional): [
-     *             (recursive schema, see above)
-     *         ]
-     *     }
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     subnetId: String (Optional)
-     *     keyvaultReferenceIdentityType: String (Optional)
-     *     keyvaultReferenceIdentityId: String (Optional)
-     * }
-     * }</pre>
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Load test model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test model along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<TestModel>> createOrUpdateTestWithResponseAsync(
+            String testId, TestModel body, Context context) {
+        final String accept = "application/json";
+        return service.createOrUpdateTest(
+                this.client.getEndpoint(), this.client.getApiVersion(), testId, body, accept, context);
+    }
+
+    /**
+     * Create a new test or Update an existing test.
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body Load test model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestModel> createOrUpdateTestAsync(String testId, TestModel body) {
+        return createOrUpdateTestWithResponseAsync(testId, body).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Create a new test or Update an existing test.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Load test model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestModel> createOrUpdateTestAsync(String testId, TestModel body, Context context) {
+        return createOrUpdateTestWithResponseAsync(testId, body, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Create a new test or Update an existing test.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Load test model.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test model.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public TestModel createOrUpdateTest(String testId, TestModel body) {
+        return createOrUpdateTestAsync(testId, body).block();
+    }
+
+    /**
+     * Create a new test or Update an existing test.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Load test model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return load test model along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> createOrUpdateTestWithResponse(
-            String testId, BinaryData body, RequestOptions requestOptions) {
-        return createOrUpdateTestWithResponseAsync(testId, body, requestOptions).block();
+    public Response<TestModel> createOrUpdateTestWithResponse(String testId, TestModel body, Context context) {
+        return createOrUpdateTestWithResponseAsync(testId, body, context).block();
     }
 
     /**
      * Delete a test by its name.
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<Void>> deleteLoadTestWithResponseAsync(String testId, RequestOptions requestOptions) {
+    public Mono<Response<Void>> deleteLoadTestWithResponseAsync(String testId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.deleteLoadTest(
-                                this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
-                                testId,
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), this.client.getApiVersion(), testId, accept, context));
     }
 
     /**
      * Delete a test by its name.
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<Void>> deleteLoadTestWithResponseAsync(String testId, Context context) {
+        final String accept = "application/json";
+        return service.deleteLoadTest(this.client.getEndpoint(), this.client.getApiVersion(), testId, accept, context);
+    }
+
+    /**
+     * Delete a test by its name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteLoadTestAsync(String testId) {
+        return deleteLoadTestWithResponseAsync(testId).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete a test by its name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteLoadTestAsync(String testId, Context context) {
+        return deleteLoadTestWithResponseAsync(testId, context).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete a test by its name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void deleteLoadTest(String testId) {
+        deleteLoadTestAsync(testId).block();
+    }
+
+    /**
+     * Delete a test by its name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> deleteLoadTestWithResponse(String testId, RequestOptions requestOptions) {
-        return deleteLoadTestWithResponseAsync(testId, requestOptions).block();
+    public Response<Void> deleteLoadTestWithResponse(String testId, Context context) {
+        return deleteLoadTestWithResponseAsync(testId, context).block();
     }
 
     /**
      * Get load test details by test name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testId: String (Optional)
-     *     description: String (Optional)
-     *     displayName: String (Optional)
-     *     resourceId: String (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     inputArtifacts (Optional): {
-     *         configUrl (Optional): {
-     *             url: String (Optional)
-     *             fileId: String (Optional)
-     *             filename: String (Optional)
-     *             fileType: String(0/1/2) (Optional)
-     *             expireTime: OffsetDateTime (Optional)
-     *             validationStatus: String (Optional)
-     *         }
-     *         testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *         userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *         inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *         additionalUrls (Optional): [
-     *             (recursive schema, see above)
-     *         ]
-     *     }
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     subnetId: String (Optional)
-     *     keyvaultReferenceIdentityType: String (Optional)
-     *     keyvaultReferenceIdentityId: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return load test details by test name along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getLoadTestWithResponseAsync(String testId, RequestOptions requestOptions) {
+    public Mono<Response<TestModel>> getLoadTestWithResponseAsync(String testId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getLoadTest(
-                                this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
-                                testId,
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), this.client.getApiVersion(), testId, accept, context));
     }
 
     /**
      * Get load test details by test name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testId: String (Optional)
-     *     description: String (Optional)
-     *     displayName: String (Optional)
-     *     resourceId: String (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     inputArtifacts (Optional): {
-     *         configUrl (Optional): {
-     *             url: String (Optional)
-     *             fileId: String (Optional)
-     *             filename: String (Optional)
-     *             fileType: String(0/1/2) (Optional)
-     *             expireTime: OffsetDateTime (Optional)
-     *             validationStatus: String (Optional)
-     *         }
-     *         testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *         userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *         inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *         additionalUrls (Optional): [
-     *             (recursive schema, see above)
-     *         ]
-     *     }
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     subnetId: String (Optional)
-     *     keyvaultReferenceIdentityType: String (Optional)
-     *     keyvaultReferenceIdentityId: String (Optional)
-     * }
-     * }</pre>
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test details by test name along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<TestModel>> getLoadTestWithResponseAsync(String testId, Context context) {
+        final String accept = "application/json";
+        return service.getLoadTest(this.client.getEndpoint(), this.client.getApiVersion(), testId, accept, context);
+    }
+
+    /**
+     * Get load test details by test name.
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test details by test name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestModel> getLoadTestAsync(String testId) {
+        return getLoadTestWithResponseAsync(testId).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get load test details by test name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test details by test name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestModel> getLoadTestAsync(String testId, Context context) {
+        return getLoadTestWithResponseAsync(testId, context).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get load test details by test name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test details by test name.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public TestModel getLoadTest(String testId) {
+        return getLoadTestAsync(testId).block();
+    }
+
+    /**
+     * Get load test details by test name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return load test details by test name along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getLoadTestWithResponse(String testId, RequestOptions requestOptions) {
-        return getLoadTestWithResponseAsync(testId, requestOptions).block();
+    public Response<TestModel> getLoadTestWithResponse(String testId, Context context) {
+        return getLoadTestWithResponseAsync(testId, context).block();
     }
 
     /**
      * Get all load tests by the fully qualified resource Id e.g
      * subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName}.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>orderBy</td><td>String</td><td>No</td><td>Sort on one of the field - lastModifiedDateTime, displayName, createdBy in (field asc/desc) format. eg: displayName asc.</td></tr>
-     *     <tr><td>search</td><td>String</td><td>No</td><td>Filter search based on searchable fields - testId, createdBy.</td></tr>
-     *     <tr><td>lastUpdatedStartTime</td><td>OffsetDateTime</td><td>No</td><td>Start DateTime(ISO 8601 literal format) of the last updated time range to filter tests.</td></tr>
-     *     <tr><td>lastUpdatedEndTime</td><td>OffsetDateTime</td><td>No</td><td>End DateTime(ISO 8601 literal format) of the last updated time range to filter tests.</td></tr>
-     *     <tr><td>continuationToken</td><td>String</td><td>No</td><td>Continuation token to get the next page of response.</td></tr>
-     *     <tr><td>maxPageSize</td><td>Integer</td><td>No</td><td>Number of results in response.</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     value (Required): [
-     *          (Required){
-     *             testId: String (Optional)
-     *             description: String (Optional)
-     *             displayName: String (Optional)
-     *             resourceId: String (Optional)
-     *             loadTestConfig (Optional): {
-     *                 engineInstances: Integer (Optional)
-     *                 splitAllCSVs: Boolean (Optional)
-     *             }
-     *             passFailCriteria (Optional): {
-     *                 passFailMetrics (Optional): {
-     *                     String (Optional): {
-     *                         clientmetric: String (Optional)
-     *                         aggregate: String (Optional)
-     *                         condition: String (Optional)
-     *                         requestName: String (Optional)
-     *                         value: Double (Optional)
-     *                         action: String (Optional)
-     *                         actualValue: Double (Optional)
-     *                         result: String (Optional)
-     *                     }
-     *                 }
-     *             }
-     *             createdDateTime: OffsetDateTime (Optional)
-     *             createdBy: String (Optional)
-     *             lastModifiedDateTime: OffsetDateTime (Optional)
-     *             lastModifiedBy: String (Optional)
-     *             inputArtifacts (Optional): {
-     *                 configUrl (Optional): {
-     *                     url: String (Optional)
-     *                     fileId: String (Optional)
-     *                     filename: String (Optional)
-     *                     fileType: String(0/1/2) (Optional)
-     *                     expireTime: OffsetDateTime (Optional)
-     *                     validationStatus: String (Optional)
-     *                 }
-     *                 testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *                 userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *                 inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *                 additionalUrls (Optional): [
-     *                     (recursive schema, see above)
-     *                 ]
-     *             }
-     *             secrets (Optional): {
-     *                 String (Optional): {
-     *                     value: String (Optional)
-     *                     type: String (Optional)
-     *                 }
-     *             }
-     *             environmentVariables (Optional): {
-     *                 String: String (Optional)
-     *             }
-     *             subnetId: String (Optional)
-     *             keyvaultReferenceIdentityType: String (Optional)
-     *             keyvaultReferenceIdentityId: String (Optional)
-     *         }
-     *     ]
-     *     nextLink: String (Optional)
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param orderBy Sort on one of the field - lastModifiedDateTime, displayName, createdBy in (field asc/desc)
+     *     format. eg: displayName asc.
+     * @param search Filter search based on searchable fields - testId, createdBy.
+     * @param lastUpdatedStartTime Start DateTime(ISO 8601 literal format) of the last updated time range to filter
+     *     tests.
+     * @param lastUpdatedEndTime End DateTime(ISO 8601 literal format) of the last updated time range to filter tests.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param maxPageSize Number of results in response.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all load tests by the fully qualified resource Id e.g
      *     subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName} along with
      *     {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> listLoadTestSearchWithResponseAsync(RequestOptions requestOptions) {
+    public Mono<Response<TestModelResourceList>> listLoadTestSearchWithResponseAsync(
+            String orderBy,
+            String search,
+            OffsetDateTime lastUpdatedStartTime,
+            OffsetDateTime lastUpdatedEndTime,
+            String continuationToken,
+            Integer maxPageSize) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.listLoadTestSearch(
                                 this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
+                                orderBy,
+                                search,
+                                lastUpdatedStartTime,
+                                lastUpdatedEndTime,
+                                continuationToken,
+                                maxPageSize,
+                                this.client.getApiVersion(),
                                 accept,
-                                requestOptions,
                                 context));
     }
 
@@ -827,159 +500,218 @@ public final class TestsImpl {
      * Get all load tests by the fully qualified resource Id e.g
      * subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName}.
      *
-     * <p><strong>Query Parameters</strong>
+     * @param orderBy Sort on one of the field - lastModifiedDateTime, displayName, createdBy in (field asc/desc)
+     *     format. eg: displayName asc.
+     * @param search Filter search based on searchable fields - testId, createdBy.
+     * @param lastUpdatedStartTime Start DateTime(ISO 8601 literal format) of the last updated time range to filter
+     *     tests.
+     * @param lastUpdatedEndTime End DateTime(ISO 8601 literal format) of the last updated time range to filter tests.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param maxPageSize Number of results in response.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all load tests by the fully qualified resource Id e.g
+     *     subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName} along with
+     *     {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<TestModelResourceList>> listLoadTestSearchWithResponseAsync(
+            String orderBy,
+            String search,
+            OffsetDateTime lastUpdatedStartTime,
+            OffsetDateTime lastUpdatedEndTime,
+            String continuationToken,
+            Integer maxPageSize,
+            Context context) {
+        final String accept = "application/json";
+        return service.listLoadTestSearch(
+                this.client.getEndpoint(),
+                orderBy,
+                search,
+                lastUpdatedStartTime,
+                lastUpdatedEndTime,
+                continuationToken,
+                maxPageSize,
+                this.client.getApiVersion(),
+                accept,
+                context);
+    }
+
+    /**
+     * Get all load tests by the fully qualified resource Id e.g
+     * subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName}.
      *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>orderBy</td><td>String</td><td>No</td><td>Sort on one of the field - lastModifiedDateTime, displayName, createdBy in (field asc/desc) format. eg: displayName asc.</td></tr>
-     *     <tr><td>search</td><td>String</td><td>No</td><td>Filter search based on searchable fields - testId, createdBy.</td></tr>
-     *     <tr><td>lastUpdatedStartTime</td><td>OffsetDateTime</td><td>No</td><td>Start DateTime(ISO 8601 literal format) of the last updated time range to filter tests.</td></tr>
-     *     <tr><td>lastUpdatedEndTime</td><td>OffsetDateTime</td><td>No</td><td>End DateTime(ISO 8601 literal format) of the last updated time range to filter tests.</td></tr>
-     *     <tr><td>continuationToken</td><td>String</td><td>No</td><td>Continuation token to get the next page of response.</td></tr>
-     *     <tr><td>maxPageSize</td><td>Integer</td><td>No</td><td>Number of results in response.</td></tr>
-     * </table>
+     * @param orderBy Sort on one of the field - lastModifiedDateTime, displayName, createdBy in (field asc/desc)
+     *     format. eg: displayName asc.
+     * @param search Filter search based on searchable fields - testId, createdBy.
+     * @param lastUpdatedStartTime Start DateTime(ISO 8601 literal format) of the last updated time range to filter
+     *     tests.
+     * @param lastUpdatedEndTime End DateTime(ISO 8601 literal format) of the last updated time range to filter tests.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param maxPageSize Number of results in response.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all load tests by the fully qualified resource Id e.g
+     *     subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName} on
+     *     successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestModelResourceList> listLoadTestSearchAsync(
+            String orderBy,
+            String search,
+            OffsetDateTime lastUpdatedStartTime,
+            OffsetDateTime lastUpdatedEndTime,
+            String continuationToken,
+            Integer maxPageSize) {
+        return listLoadTestSearchWithResponseAsync(
+                        orderBy, search, lastUpdatedStartTime, lastUpdatedEndTime, continuationToken, maxPageSize)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all load tests by the fully qualified resource Id e.g
+     * subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName}.
      *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
+     * @param orderBy Sort on one of the field - lastModifiedDateTime, displayName, createdBy in (field asc/desc)
+     *     format. eg: displayName asc.
+     * @param search Filter search based on searchable fields - testId, createdBy.
+     * @param lastUpdatedStartTime Start DateTime(ISO 8601 literal format) of the last updated time range to filter
+     *     tests.
+     * @param lastUpdatedEndTime End DateTime(ISO 8601 literal format) of the last updated time range to filter tests.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param maxPageSize Number of results in response.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all load tests by the fully qualified resource Id e.g
+     *     subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName} on
+     *     successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestModelResourceList> listLoadTestSearchAsync(
+            String orderBy,
+            String search,
+            OffsetDateTime lastUpdatedStartTime,
+            OffsetDateTime lastUpdatedEndTime,
+            String continuationToken,
+            Integer maxPageSize,
+            Context context) {
+        return listLoadTestSearchWithResponseAsync(
+                        orderBy,
+                        search,
+                        lastUpdatedStartTime,
+                        lastUpdatedEndTime,
+                        continuationToken,
+                        maxPageSize,
+                        context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all load tests by the fully qualified resource Id e.g
+     * subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName}.
      *
-     * <p><strong>Response Body Schema</strong>
+     * @param orderBy Sort on one of the field - lastModifiedDateTime, displayName, createdBy in (field asc/desc)
+     *     format. eg: displayName asc.
+     * @param search Filter search based on searchable fields - testId, createdBy.
+     * @param lastUpdatedStartTime Start DateTime(ISO 8601 literal format) of the last updated time range to filter
+     *     tests.
+     * @param lastUpdatedEndTime End DateTime(ISO 8601 literal format) of the last updated time range to filter tests.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param maxPageSize Number of results in response.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all load tests by the fully qualified resource Id e.g
+     *     subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public TestModelResourceList listLoadTestSearch(
+            String orderBy,
+            String search,
+            OffsetDateTime lastUpdatedStartTime,
+            OffsetDateTime lastUpdatedEndTime,
+            String continuationToken,
+            Integer maxPageSize) {
+        return listLoadTestSearchAsync(
+                        orderBy, search, lastUpdatedStartTime, lastUpdatedEndTime, continuationToken, maxPageSize)
+                .block();
+    }
+
+    /**
+     * Get all load tests by the fully qualified resource Id e.g
+     * subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName}.
      *
-     * <pre>{@code
-     * {
-     *     value (Required): [
-     *          (Required){
-     *             testId: String (Optional)
-     *             description: String (Optional)
-     *             displayName: String (Optional)
-     *             resourceId: String (Optional)
-     *             loadTestConfig (Optional): {
-     *                 engineInstances: Integer (Optional)
-     *                 splitAllCSVs: Boolean (Optional)
-     *             }
-     *             passFailCriteria (Optional): {
-     *                 passFailMetrics (Optional): {
-     *                     String (Optional): {
-     *                         clientmetric: String (Optional)
-     *                         aggregate: String (Optional)
-     *                         condition: String (Optional)
-     *                         requestName: String (Optional)
-     *                         value: Double (Optional)
-     *                         action: String (Optional)
-     *                         actualValue: Double (Optional)
-     *                         result: String (Optional)
-     *                     }
-     *                 }
-     *             }
-     *             createdDateTime: OffsetDateTime (Optional)
-     *             createdBy: String (Optional)
-     *             lastModifiedDateTime: OffsetDateTime (Optional)
-     *             lastModifiedBy: String (Optional)
-     *             inputArtifacts (Optional): {
-     *                 configUrl (Optional): {
-     *                     url: String (Optional)
-     *                     fileId: String (Optional)
-     *                     filename: String (Optional)
-     *                     fileType: String(0/1/2) (Optional)
-     *                     expireTime: OffsetDateTime (Optional)
-     *                     validationStatus: String (Optional)
-     *                 }
-     *                 testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *                 userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *                 inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *                 additionalUrls (Optional): [
-     *                     (recursive schema, see above)
-     *                 ]
-     *             }
-     *             secrets (Optional): {
-     *                 String (Optional): {
-     *                     value: String (Optional)
-     *                     type: String (Optional)
-     *                 }
-     *             }
-     *             environmentVariables (Optional): {
-     *                 String: String (Optional)
-     *             }
-     *             subnetId: String (Optional)
-     *             keyvaultReferenceIdentityType: String (Optional)
-     *             keyvaultReferenceIdentityId: String (Optional)
-     *         }
-     *     ]
-     *     nextLink: String (Optional)
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param orderBy Sort on one of the field - lastModifiedDateTime, displayName, createdBy in (field asc/desc)
+     *     format. eg: displayName asc.
+     * @param search Filter search based on searchable fields - testId, createdBy.
+     * @param lastUpdatedStartTime Start DateTime(ISO 8601 literal format) of the last updated time range to filter
+     *     tests.
+     * @param lastUpdatedEndTime End DateTime(ISO 8601 literal format) of the last updated time range to filter tests.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param maxPageSize Number of results in response.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all load tests by the fully qualified resource Id e.g
      *     subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.LoadTestService/loadtests/{resName} along with
      *     {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> listLoadTestSearchWithResponse(RequestOptions requestOptions) {
-        return listLoadTestSearchWithResponseAsync(requestOptions).block();
+    public Response<TestModelResourceList> listLoadTestSearchWithResponse(
+            String orderBy,
+            String search,
+            OffsetDateTime lastUpdatedStartTime,
+            OffsetDateTime lastUpdatedEndTime,
+            String continuationToken,
+            Integer maxPageSize,
+            Context context) {
+        return listLoadTestSearchWithResponseAsync(
+                        orderBy,
+                        search,
+                        lastUpdatedStartTime,
+                        lastUpdatedEndTime,
+                        continuationToken,
+                        maxPageSize,
+                        context)
+                .block();
     }
 
     /**
      * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
      * given test will be overwritten. File should be provided in the request body as multipart/form-data.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>fileType</td><td>Integer</td><td>No</td><td>Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 = ADDITIONAL_ARTIFACTS).</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * BinaryData
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     url: String (Optional)
-     *     fileId: String (Optional)
-     *     filename: String (Optional)
-     *     fileType: String(0/1/2) (Optional)
-     *     expireTime: OffsetDateTime (Optional)
-     *     validationStatus: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
      * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
      * @param file The file to be uploaded.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return fileUrl Model along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> uploadTestFileWithResponseAsync(
-            String testId, String fileId, BinaryData file, RequestOptions requestOptions) {
+    public Mono<Response<FileUrl>> uploadTestFileWithResponseAsync(
+            String testId, String fileId, Flux<ByteBuffer> file, long contentLength, Integer fileType) {
         final String accept = "application/json";
-        // Replace file with a request body containing file and multipart boundary
         return FluxUtil.withContext(
                 context ->
                         service.uploadTestFile(
                                 this.client.getEndpoint(),
                                 testId,
                                 fileId,
-                                this.client.getServiceVersion().getVersion(),
+                                fileType,
+                                this.client.getApiVersion(),
                                 file,
+                                contentLength,
                                 accept,
-                                requestOptions,
                                 context));
     }
 
@@ -987,79 +719,301 @@ public final class TestsImpl {
      * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
      * given test will be overwritten. File should be provided in the request body as multipart/form-data.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>fileType</td><td>Integer</td><td>No</td><td>Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 = ADDITIONAL_ARTIFACTS).</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * BinaryData
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     url: String (Optional)
-     *     fileId: String (Optional)
-     *     filename: String (Optional)
-     *     fileType: String(0/1/2) (Optional)
-     *     expireTime: OffsetDateTime (Optional)
-     *     validationStatus: String (Optional)
-     * }
-     * }</pre>
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<FileUrl>> uploadTestFileWithResponseAsync(
+            String testId,
+            String fileId,
+            Flux<ByteBuffer> file,
+            long contentLength,
+            Integer fileType,
+            Context context) {
+        final String accept = "application/json";
+        return service.uploadTestFile(
+                this.client.getEndpoint(),
+                testId,
+                fileId,
+                fileType,
+                this.client.getApiVersion(),
+                file,
+                contentLength,
+                accept,
+                context);
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
      * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
      * @param file The file to be uploaded.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrl> uploadTestFileAsync(
+            String testId, String fileId, Flux<ByteBuffer> file, long contentLength, Integer fileType) {
+        return uploadTestFileWithResponseAsync(testId, fileId, file, contentLength, fileType)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrl> uploadTestFileAsync(
+            String testId,
+            String fileId,
+            Flux<ByteBuffer> file,
+            long contentLength,
+            Integer fileType,
+            Context context) {
+        return uploadTestFileWithResponseAsync(testId, fileId, file, contentLength, fileType, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public FileUrl uploadTestFile(
+            String testId, String fileId, Flux<ByteBuffer> file, long contentLength, Integer fileType) {
+        return uploadTestFileAsync(testId, fileId, file, contentLength, fileType).block();
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return fileUrl Model along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> uploadTestFileWithResponse(
-            String testId, String fileId, BinaryData file, RequestOptions requestOptions) {
-        return uploadTestFileWithResponseAsync(testId, fileId, file, requestOptions).block();
+    public Response<FileUrl> uploadTestFileWithResponse(
+            String testId,
+            String fileId,
+            Flux<ByteBuffer> file,
+            long contentLength,
+            Integer fileType,
+            Context context) {
+        return uploadTestFileWithResponseAsync(testId, fileId, file, contentLength, fileType, context).block();
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<FileUrl>> uploadTestFileWithResponseAsync(
+            String testId, String fileId, BinaryData file, long contentLength, Integer fileType) {
+        final String accept = "application/json";
+        return FluxUtil.withContext(
+                context ->
+                        service.uploadTestFile(
+                                this.client.getEndpoint(),
+                                testId,
+                                fileId,
+                                fileType,
+                                this.client.getApiVersion(),
+                                file,
+                                contentLength,
+                                accept,
+                                context));
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<FileUrl>> uploadTestFileWithResponseAsync(
+            String testId, String fileId, BinaryData file, long contentLength, Integer fileType, Context context) {
+        final String accept = "application/json";
+        return service.uploadTestFile(
+                this.client.getEndpoint(),
+                testId,
+                fileId,
+                fileType,
+                this.client.getApiVersion(),
+                file,
+                contentLength,
+                accept,
+                context);
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrl> uploadTestFileAsync(
+            String testId, String fileId, BinaryData file, long contentLength, Integer fileType) {
+        return uploadTestFileWithResponseAsync(testId, fileId, file, contentLength, fileType)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrl> uploadTestFileAsync(
+            String testId, String fileId, BinaryData file, long contentLength, Integer fileType, Context context) {
+        return uploadTestFileWithResponseAsync(testId, fileId, file, contentLength, fileType, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public FileUrl uploadTestFile(String testId, String fileId, BinaryData file, long contentLength, Integer fileType) {
+        return uploadTestFileAsync(testId, fileId, file, contentLength, fileType).block();
+    }
+
+    /**
+     * Upload input file for a given test name. File size can't be more than 50 MB. Existing file with same name for the
+     * given test will be overwritten. File should be provided in the request body as multipart/form-data.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param file The file to be uploaded.
+     * @param contentLength The Content-Length header for the request.
+     * @param fileType Integer representation of the file type (0 = JMX_FILE, 1 = USER_PROPERTIES, 2 =
+     *     ADDITIONAL_ARTIFACTS).
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return fileUrl Model along with {@link Response}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Response<FileUrl> uploadTestFileWithResponse(
+            String testId, String fileId, BinaryData file, long contentLength, Integer fileType, Context context) {
+        return uploadTestFileWithResponseAsync(testId, fileId, file, contentLength, fileType, context).block();
     }
 
     /**
      * Get test file by the file name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     url: String (Optional)
-     *     fileId: String (Optional)
-     *     filename: String (Optional)
-     *     fileType: String(0/1/2) (Optional)
-     *     expireTime: OffsetDateTime (Optional)
-     *     validationStatus: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
      * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return test file by the file name along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getTestFileWithResponseAsync(
-            String testId, String fileId, RequestOptions requestOptions) {
+    public Mono<Response<FileUrl>> getTestFileWithResponseAsync(String testId, String fileId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
@@ -1067,40 +1021,89 @@ public final class TestsImpl {
                                 this.client.getEndpoint(),
                                 testId,
                                 fileId,
-                                this.client.getServiceVersion().getVersion(),
+                                this.client.getApiVersion(),
                                 accept,
-                                requestOptions,
                                 context));
     }
 
     /**
      * Get test file by the file name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     url: String (Optional)
-     *     fileId: String (Optional)
-     *     filename: String (Optional)
-     *     fileType: String(0/1/2) (Optional)
-     *     expireTime: OffsetDateTime (Optional)
-     *     validationStatus: String (Optional)
-     * }
-     * }</pre>
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test file by the file name along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<FileUrl>> getTestFileWithResponseAsync(String testId, String fileId, Context context) {
+        final String accept = "application/json";
+        return service.getTestFile(
+                this.client.getEndpoint(), testId, fileId, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Get test file by the file name.
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
      * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test file by the file name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrl> getTestFileAsync(String testId, String fileId) {
+        return getTestFileWithResponseAsync(testId, fileId).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get test file by the file name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test file by the file name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrl> getTestFileAsync(String testId, String fileId, Context context) {
+        return getTestFileWithResponseAsync(testId, fileId, context).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get test file by the file name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test file by the file name.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public FileUrl getTestFile(String testId, String fileId) {
+        return getTestFileAsync(testId, fileId).block();
+    }
+
+    /**
+     * Get test file by the file name.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return test file by the file name along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getTestFileWithResponse(String testId, String fileId, RequestOptions requestOptions) {
-        return getTestFileWithResponseAsync(testId, fileId, requestOptions).block();
+    public Response<FileUrl> getTestFileWithResponse(String testId, String fileId, Context context) {
+        return getTestFileWithResponseAsync(testId, fileId, context).block();
     }
 
     /**
@@ -1108,16 +1111,13 @@ public final class TestsImpl {
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
      * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<Void>> deleteTestFileWithResponseAsync(
-            String testId, String fileId, RequestOptions requestOptions) {
+    public Mono<Response<Void>> deleteTestFileWithResponseAsync(String testId, String fileId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
@@ -1125,9 +1125,8 @@ public final class TestsImpl {
                                 this.client.getEndpoint(),
                                 testId,
                                 fileId,
-                                this.client.getServiceVersion().getVersion(),
+                                this.client.getApiVersion(),
                                 accept,
-                                requestOptions,
                                 context));
     }
 
@@ -1136,112 +1135,184 @@ public final class TestsImpl {
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
      * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<Void>> deleteTestFileWithResponseAsync(String testId, String fileId, Context context) {
+        final String accept = "application/json";
+        return service.deleteTestFile(
+                this.client.getEndpoint(), testId, fileId, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Delete file by the file name for a test.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteTestFileAsync(String testId, String fileId) {
+        return deleteTestFileWithResponseAsync(testId, fileId).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete file by the file name for a test.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteTestFileAsync(String testId, String fileId, Context context) {
+        return deleteTestFileWithResponseAsync(testId, fileId, context).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete file by the file name for a test.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void deleteTestFile(String testId, String fileId) {
+        deleteTestFileAsync(testId, fileId).block();
+    }
+
+    /**
+     * Delete file by the file name for a test.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> deleteTestFileWithResponse(String testId, String fileId, RequestOptions requestOptions) {
-        return deleteTestFileWithResponseAsync(testId, fileId, requestOptions).block();
+    public Response<Void> deleteTestFileWithResponse(String testId, String fileId, Context context) {
+        return deleteTestFileWithResponseAsync(testId, fileId, context).block();
     }
 
     /**
      * Get all test files.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>continuationToken</td><td>String</td><td>No</td><td>Continuation token to get the next page of response.</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     value (Required): [
-     *          (Required){
-     *             url: String (Optional)
-     *             fileId: String (Optional)
-     *             filename: String (Optional)
-     *             fileType: String(0/1/2) (Optional)
-     *             expireTime: OffsetDateTime (Optional)
-     *             validationStatus: String (Optional)
-     *         }
-     *     ]
-     *     nextLink: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all test files along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getAllTestFilesWithResponseAsync(String testId, RequestOptions requestOptions) {
+    public Mono<Response<FileUrlList>> getAllTestFilesWithResponseAsync(String testId, String continuationToken) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getAllTestFiles(
                                 this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
+                                this.client.getApiVersion(),
                                 testId,
+                                continuationToken,
                                 accept,
-                                requestOptions,
                                 context));
     }
 
     /**
      * Get all test files.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>continuationToken</td><td>String</td><td>No</td><td>Continuation token to get the next page of response.</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     value (Required): [
-     *          (Required){
-     *             url: String (Optional)
-     *             fileId: String (Optional)
-     *             filename: String (Optional)
-     *             fileType: String(0/1/2) (Optional)
-     *             expireTime: OffsetDateTime (Optional)
-     *             validationStatus: String (Optional)
-     *         }
-     *     ]
-     *     nextLink: String (Optional)
-     * }
-     * }</pre>
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all test files along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<FileUrlList>> getAllTestFilesWithResponseAsync(
+            String testId, String continuationToken, Context context) {
+        final String accept = "application/json";
+        return service.getAllTestFiles(
+                this.client.getEndpoint(), this.client.getApiVersion(), testId, continuationToken, accept, context);
+    }
+
+    /**
+     * Get all test files.
      *
      * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all test files on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrlList> getAllTestFilesAsync(String testId, String continuationToken) {
+        return getAllTestFilesWithResponseAsync(testId, continuationToken)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all test files.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all test files on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrlList> getAllTestFilesAsync(String testId, String continuationToken, Context context) {
+        return getAllTestFilesWithResponseAsync(testId, continuationToken, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all test files.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all test files.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public FileUrlList getAllTestFiles(String testId, String continuationToken) {
+        return getAllTestFilesAsync(testId, continuationToken).block();
+    }
+
+    /**
+     * Get all test files.
+     *
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all test files along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getAllTestFilesWithResponse(String testId, RequestOptions requestOptions) {
-        return getAllTestFilesWithResponseAsync(testId, requestOptions).block();
+    public Response<FileUrlList> getAllTestFilesWithResponse(String testId, String continuationToken, Context context) {
+        return getAllTestFilesWithResponseAsync(testId, continuationToken, context).block();
     }
 }

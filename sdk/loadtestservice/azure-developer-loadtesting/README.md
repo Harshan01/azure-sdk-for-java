@@ -98,90 +98,17 @@ During a load test, Azure Load Testing collects metrics about the test execution
 
 ### Creating a Load Test
 
-```java com.azure.developer.loadtesting.readme
-import java.util.HashMap;
-import java.util.Map;
-import com.azure.identity.*;
-import com.azure.developer.loadtesting.*;
-import com.azure.developer.loadtesting.models.*;
-
-public class CreateTest {
-    public static void main( String[] args )
-    {
-        TestClientBuilder testClientBuilder = new TestClientBuilder();
-        TestClient testClient = testClientBuilder
-            .credential(new DefaultAzureCredentialBuilder().build())
-            .endpoint("<endpoint>")
-            .buildClient();
-        
-        TestModel test = new TestModel()
-            .setDisplayName("Sample Display Name")
-            .setDescription("Sample Test Description")
-            .setLoadTestConfig(new LoadTestConfig()
-                .setEngineInstances(1))
-            .setEnvironmentVariables(new HashMap<String, String>(
-                Map.of("k1", "v1", "k2", "v2")
-            ));
-
-        TestModel testOut = testClient.createOrUpdateTest("test12345", test, null);
-        System.out.println(testOut.getTestId());
-    }
-}
+```java
 ```
 
 ### Uploading .jmx file to a Test
 
-```java com.azure.developer.loadtesting.readme
-import java.io.File;
-import com.azure.identity.*;
-import com.azure.core.util.*;
-import com.azure.developer.loadtesting.*;
-import com.azure.developer.loadtesting.models.*;
-
-public class UploadTestFile {
-    public static void main(String[] args) {
-        TestClientBuilder testClientBuilder = new TestClientBuilder();
-        TestClient testClient = testClientBuilder
-            .credential(new DefaultAzureCredentialBuilder().build())
-            .endpoint("<endpoint>")
-            .buildClient();
-        
-        BinaryData fileData = BinaryData.fromFile(new File("path/to/file").toPath());
-
-        FileUrl fileUrlOut = testClient.uploadTestFile("test12345", "file12345", "sample-file.jmx", fileData, null);
-        System.out.println(fileUrlOut.getValidationStatus());
-    }
-}
-
+```java
 ```
 
 ### Running a Test
 
-```java com.azure.developer.loadtesting.readme
-import com.azure.identity.*;
-import com.azure.developer.loadtesting.*;
-import com.azure.developer.loadtesting.models.*;
-
-public class CreateTestRun {
-    public static void main( String[] args )
-    {
-        TestRunClientBuilder testRunClientBuilder = new TestRunClientBuilder();
-        TestRunClient testRunClient = testRunClientBuilder
-            .credential(new DefaultAzureCredentialBuilder().build())
-            .endpoint("<endpoint>")
-            .buildClient();
-        
-        TestRunModel testRun = new TestRunModel()
-            .setTestId("test12345")
-            .setDisplayName("Sample Test Run")
-            .setLoadTestConfig(new LoadTestConfig()
-                .setEngineInstances(2)
-            );
-
-        TestRunModel testRunOut = testRunClient.createAndUpdateTest("testrun12345", testRun, null);
-        System.out.println(testRunOut.getStatus());
-    }
-}
+```java
 ```
 
 ## Troubleshooting

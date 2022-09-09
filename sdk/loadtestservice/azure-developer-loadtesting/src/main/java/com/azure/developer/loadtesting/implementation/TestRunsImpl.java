@@ -19,16 +19,18 @@ import com.azure.core.annotation.ReturnType;
 import com.azure.core.annotation.ServiceInterface;
 import com.azure.core.annotation.ServiceMethod;
 import com.azure.core.annotation.UnexpectedResponseExceptionType;
-import com.azure.core.exception.ClientAuthenticationException;
-import com.azure.core.exception.HttpResponseException;
-import com.azure.core.exception.ResourceModifiedException;
-import com.azure.core.exception.ResourceNotFoundException;
-import com.azure.core.http.rest.RequestOptions;
 import com.azure.core.http.rest.Response;
 import com.azure.core.http.rest.RestProxy;
-import com.azure.core.util.BinaryData;
 import com.azure.core.util.Context;
 import com.azure.core.util.FluxUtil;
+import com.azure.developer.loadtesting.models.ClientMetricsFilters;
+import com.azure.developer.loadtesting.models.ClientMetricsRequestModel;
+import com.azure.developer.loadtesting.models.ClientMetricsResults;
+import com.azure.developer.loadtesting.models.ErrorResponseBodyException;
+import com.azure.developer.loadtesting.models.FileUrl;
+import com.azure.developer.loadtesting.models.TestRunModel;
+import com.azure.developer.loadtesting.models.TestRunModelResourceList;
+import java.time.OffsetDateTime;
 import reactor.core.publisher.Mono;
 
 /** An instance of this class provides access to all the operations defined in TestRuns. */
@@ -37,185 +39,114 @@ public final class TestRunsImpl {
     private final TestRunsService service;
 
     /** The service client containing this operation class. */
-    private final LoadTestClientImpl client;
+    private final AzureLoadTestingImpl client;
 
     /**
      * Initializes an instance of TestRunsImpl.
      *
      * @param client the instance of the service client containing this operation class.
      */
-    TestRunsImpl(LoadTestClientImpl client) {
+    TestRunsImpl(AzureLoadTestingImpl client) {
         this.service = RestProxy.create(TestRunsService.class, client.getHttpPipeline(), client.getSerializerAdapter());
         this.client = client;
     }
 
     /**
-     * The interface defining all the services for LoadTestClientTestRuns to be used by the proxy service to perform
+     * The interface defining all the services for AzureLoadTestingTestRuns to be used by the proxy service to perform
      * REST calls.
      */
     @Host("https://{Endpoint}")
-    @ServiceInterface(name = "LoadTestClientTestRu")
-    private interface TestRunsService {
+    @ServiceInterface(name = "AzureLoadTestingTest")
+    public interface TestRunsService {
         @Delete("/testruns/{testRunId}")
         @ExpectedResponses({204})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
         Mono<Response<Void>> deleteTestRun(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testRunId") String testRunId,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Patch("/testruns/{testRunId}")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> createAndUpdateTest(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<TestRunModel>> createAndUpdateTest(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testRunId") String testRunId,
+                @QueryParam("oldTestRunId") String oldTestRunId,
                 @QueryParam("api-version") String apiVersion,
-                @BodyParam("application/merge-patch+json") BinaryData body,
+                @BodyParam("application/merge-patch+json") TestRunModel body,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/testruns/{testRunId}")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getTestRun(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<TestRunModel>> getTestRun(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testRunId") String testRunId,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/testruns/{testRunId}/files/{fileId}")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getTestRunFile(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<FileUrl>> getTestRunFile(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testRunId") String testRunId,
                 @PathParam("fileId") String fileId,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/testruns/sortAndFilter")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> listTestRunsSearch(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<TestRunModelResourceList>> listTestRunsSearch(
                 @HostParam("Endpoint") String endpoint,
+                @QueryParam("orderBy") String orderBy,
+                @QueryParam("continuationToken") String continuationToken,
+                @QueryParam("search") String search,
+                @QueryParam("executionFrom") OffsetDateTime executionFrom,
+                @QueryParam("executionTo") OffsetDateTime executionTo,
+                @QueryParam("status") String status,
+                @QueryParam("maxPageSize") Integer maxPageSize,
                 @QueryParam("api-version") String apiVersion,
+                @QueryParam("testId") String testId,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Post("/testruns/{testRunId}:stop")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> stopTestRun(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<TestRunModel>> stopTestRun(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testRunId") String testRunId,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Post("/testruns/{testRunId}/clientMetrics")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getTestRunClientMetrics(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<ClientMetricsResults>> getTestRunClientMetrics(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testRunId") String testRunId,
                 @QueryParam("api-version") String apiVersion,
-                @BodyParam("application/json") BinaryData body,
+                @BodyParam("application/json") ClientMetricsRequestModel body,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
 
         @Get("/testruns/{testRunId}/clientMetricsFilters")
         @ExpectedResponses({200})
-        @UnexpectedResponseExceptionType(
-                value = ClientAuthenticationException.class,
-                code = {401})
-        @UnexpectedResponseExceptionType(
-                value = ResourceNotFoundException.class,
-                code = {404})
-        @UnexpectedResponseExceptionType(
-                value = ResourceModifiedException.class,
-                code = {409})
-        @UnexpectedResponseExceptionType(HttpResponseException.class)
-        Mono<Response<BinaryData>> getTestRunClientMetricsFilters(
+        @UnexpectedResponseExceptionType(ErrorResponseBodyException.class)
+        Mono<Response<ClientMetricsFilters>> getTestRunClientMetricsFilters(
                 @HostParam("Endpoint") String endpoint,
                 @PathParam("testRunId") String testRunId,
                 @QueryParam("api-version") String apiVersion,
                 @HeaderParam("Accept") String accept,
-                RequestOptions requestOptions,
                 Context context);
     }
 
@@ -223,730 +154,315 @@ public final class TestRunsImpl {
      * Delete a test run by its name.
      *
      * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<Void>> deleteTestRunWithResponseAsync(String testRunId, RequestOptions requestOptions) {
+    public Mono<Response<Void>> deleteTestRunWithResponseAsync(String testRunId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.deleteTestRun(
-                                this.client.getEndpoint(),
-                                testRunId,
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Delete a test run by its name.
      *
      * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return the {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<Void>> deleteTestRunWithResponseAsync(String testRunId, Context context) {
+        final String accept = "application/json";
+        return service.deleteTestRun(
+                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Delete a test run by its name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteTestRunAsync(String testRunId) {
+        return deleteTestRunWithResponseAsync(testRunId).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete a test run by its name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return A {@link Mono} that completes when a successful response is received.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Void> deleteTestRunAsync(String testRunId, Context context) {
+        return deleteTestRunWithResponseAsync(testRunId, context).flatMap(ignored -> Mono.empty());
+    }
+
+    /**
+     * Delete a test run by its name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public void deleteTestRun(String testRunId) {
+        deleteTestRunAsync(testRunId).block();
+    }
+
+    /**
+     * Delete a test run by its name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return the {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<Void> deleteTestRunWithResponse(String testRunId, RequestOptions requestOptions) {
-        return deleteTestRunWithResponseAsync(testRunId, requestOptions).block();
+    public Response<Void> deleteTestRunWithResponse(String testRunId, Context context) {
+        return deleteTestRunWithResponseAsync(testRunId, context).block();
     }
 
     /**
      * Create and start a new test run with the given name.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>oldTestRunId</td><td>String</td><td>No</td><td>Existing test run Id that should be rerun.</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     displayName: String (Optional)
-     *     testId: String (Optional)
-     *     resourceId: String (Optional)
-     *     description: String (Optional)
-     *     status: String (Optional)
-     *     startDateTime: OffsetDateTime (Optional)
-     *     endDateTime: OffsetDateTime (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     testResult: String (Optional)
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     testArtifacts (Optional): {
-     *         inputArtifacts (Required): {
-     *             configUrl (Optional): {
-     *                 url: String (Optional)
-     *                 fileId: String (Optional)
-     *                 filename: String (Optional)
-     *                 fileType: String(0/1/2) (Optional)
-     *                 expireTime: OffsetDateTime (Optional)
-     *                 validationStatus: String (Optional)
-     *             }
-     *             testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *             userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *             inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *             additionalUrls (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         outputArtifacts (Optional): {
-     *             resultUrl (Optional): (recursive schema, see resultUrl above)
-     *             logsUrl (Optional): (recursive schema, see logsUrl above)
-     *         }
-     *     }
-     *     executedDateTime: OffsetDateTime (Optional)
-     *     vusers: Integer (Optional)
-     *     testRunStatistics (Optional): {
-     *         String (Optional): {
-     *             transaction: String (Optional)
-     *             sampleCount: Double (Optional)
-     *             errorCount: Double (Optional)
-     *             errorPct: Double (Optional)
-     *             meanResTime: Double (Optional)
-     *             medianResTime: Double (Optional)
-     *             maxResTime: Double (Optional)
-     *             minResTime: Double (Optional)
-     *             pct1ResTime: Double (Optional)
-     *             pct2ResTime: Double (Optional)
-     *             pct3ResTime: Double (Optional)
-     *             throughput: Double (Optional)
-     *             receivedKBytesPerSec: Double (Optional)
-     *             sentKBytesPerSec: Double (Optional)
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     portalUrl: String (Optional)
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     duration: Long (Optional)
-     *     subnetId: String (Optional)
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     displayName: String (Optional)
-     *     testId: String (Optional)
-     *     resourceId: String (Optional)
-     *     description: String (Optional)
-     *     status: String (Optional)
-     *     startDateTime: OffsetDateTime (Optional)
-     *     endDateTime: OffsetDateTime (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     testResult: String (Optional)
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     testArtifacts (Optional): {
-     *         inputArtifacts (Required): {
-     *             configUrl (Optional): {
-     *                 url: String (Optional)
-     *                 fileId: String (Optional)
-     *                 filename: String (Optional)
-     *                 fileType: String(0/1/2) (Optional)
-     *                 expireTime: OffsetDateTime (Optional)
-     *                 validationStatus: String (Optional)
-     *             }
-     *             testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *             userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *             inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *             additionalUrls (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         outputArtifacts (Optional): {
-     *             resultUrl (Optional): (recursive schema, see resultUrl above)
-     *             logsUrl (Optional): (recursive schema, see logsUrl above)
-     *         }
-     *     }
-     *     executedDateTime: OffsetDateTime (Optional)
-     *     vusers: Integer (Optional)
-     *     testRunStatistics (Optional): {
-     *         String (Optional): {
-     *             transaction: String (Optional)
-     *             sampleCount: Double (Optional)
-     *             errorCount: Double (Optional)
-     *             errorPct: Double (Optional)
-     *             meanResTime: Double (Optional)
-     *             medianResTime: Double (Optional)
-     *             maxResTime: Double (Optional)
-     *             minResTime: Double (Optional)
-     *             pct1ResTime: Double (Optional)
-     *             pct2ResTime: Double (Optional)
-     *             pct3ResTime: Double (Optional)
-     *             throughput: Double (Optional)
-     *             receivedKBytesPerSec: Double (Optional)
-     *             sentKBytesPerSec: Double (Optional)
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     portalUrl: String (Optional)
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     duration: Long (Optional)
-     *     subnetId: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body Load test run model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param oldTestRunId Existing test run Id that should be rerun.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return load test run model along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> createAndUpdateTestWithResponseAsync(
-            String testRunId, BinaryData body, RequestOptions requestOptions) {
+    public Mono<Response<TestRunModel>> createAndUpdateTestWithResponseAsync(
+            String testRunId, TestRunModel body, String oldTestRunId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.createAndUpdateTest(
                                 this.client.getEndpoint(),
                                 testRunId,
-                                this.client.getServiceVersion().getVersion(),
+                                oldTestRunId,
+                                this.client.getApiVersion(),
                                 body,
                                 accept,
-                                requestOptions,
                                 context));
     }
 
     /**
      * Create and start a new test run with the given name.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>oldTestRunId</td><td>String</td><td>No</td><td>Existing test run Id that should be rerun.</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     displayName: String (Optional)
-     *     testId: String (Optional)
-     *     resourceId: String (Optional)
-     *     description: String (Optional)
-     *     status: String (Optional)
-     *     startDateTime: OffsetDateTime (Optional)
-     *     endDateTime: OffsetDateTime (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     testResult: String (Optional)
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     testArtifacts (Optional): {
-     *         inputArtifacts (Required): {
-     *             configUrl (Optional): {
-     *                 url: String (Optional)
-     *                 fileId: String (Optional)
-     *                 filename: String (Optional)
-     *                 fileType: String(0/1/2) (Optional)
-     *                 expireTime: OffsetDateTime (Optional)
-     *                 validationStatus: String (Optional)
-     *             }
-     *             testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *             userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *             inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *             additionalUrls (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         outputArtifacts (Optional): {
-     *             resultUrl (Optional): (recursive schema, see resultUrl above)
-     *             logsUrl (Optional): (recursive schema, see logsUrl above)
-     *         }
-     *     }
-     *     executedDateTime: OffsetDateTime (Optional)
-     *     vusers: Integer (Optional)
-     *     testRunStatistics (Optional): {
-     *         String (Optional): {
-     *             transaction: String (Optional)
-     *             sampleCount: Double (Optional)
-     *             errorCount: Double (Optional)
-     *             errorPct: Double (Optional)
-     *             meanResTime: Double (Optional)
-     *             medianResTime: Double (Optional)
-     *             maxResTime: Double (Optional)
-     *             minResTime: Double (Optional)
-     *             pct1ResTime: Double (Optional)
-     *             pct2ResTime: Double (Optional)
-     *             pct3ResTime: Double (Optional)
-     *             throughput: Double (Optional)
-     *             receivedKBytesPerSec: Double (Optional)
-     *             sentKBytesPerSec: Double (Optional)
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     portalUrl: String (Optional)
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     duration: Long (Optional)
-     *     subnetId: String (Optional)
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     displayName: String (Optional)
-     *     testId: String (Optional)
-     *     resourceId: String (Optional)
-     *     description: String (Optional)
-     *     status: String (Optional)
-     *     startDateTime: OffsetDateTime (Optional)
-     *     endDateTime: OffsetDateTime (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     testResult: String (Optional)
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     testArtifacts (Optional): {
-     *         inputArtifacts (Required): {
-     *             configUrl (Optional): {
-     *                 url: String (Optional)
-     *                 fileId: String (Optional)
-     *                 filename: String (Optional)
-     *                 fileType: String(0/1/2) (Optional)
-     *                 expireTime: OffsetDateTime (Optional)
-     *                 validationStatus: String (Optional)
-     *             }
-     *             testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *             userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *             inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *             additionalUrls (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         outputArtifacts (Optional): {
-     *             resultUrl (Optional): (recursive schema, see resultUrl above)
-     *             logsUrl (Optional): (recursive schema, see logsUrl above)
-     *         }
-     *     }
-     *     executedDateTime: OffsetDateTime (Optional)
-     *     vusers: Integer (Optional)
-     *     testRunStatistics (Optional): {
-     *         String (Optional): {
-     *             transaction: String (Optional)
-     *             sampleCount: Double (Optional)
-     *             errorCount: Double (Optional)
-     *             errorPct: Double (Optional)
-     *             meanResTime: Double (Optional)
-     *             medianResTime: Double (Optional)
-     *             maxResTime: Double (Optional)
-     *             minResTime: Double (Optional)
-     *             pct1ResTime: Double (Optional)
-     *             pct2ResTime: Double (Optional)
-     *             pct3ResTime: Double (Optional)
-     *             throughput: Double (Optional)
-     *             receivedKBytesPerSec: Double (Optional)
-     *             sentKBytesPerSec: Double (Optional)
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     portalUrl: String (Optional)
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     duration: Long (Optional)
-     *     subnetId: String (Optional)
-     * }
-     * }</pre>
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Load test run model.
+     * @param oldTestRunId Existing test run Id that should be rerun.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test run model along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<TestRunModel>> createAndUpdateTestWithResponseAsync(
+            String testRunId, TestRunModel body, String oldTestRunId, Context context) {
+        final String accept = "application/json";
+        return service.createAndUpdateTest(
+                this.client.getEndpoint(), testRunId, oldTestRunId, this.client.getApiVersion(), body, accept, context);
+    }
+
+    /**
+     * Create and start a new test run with the given name.
      *
      * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body Load test run model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param oldTestRunId Existing test run Id that should be rerun.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test run model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestRunModel> createAndUpdateTestAsync(String testRunId, TestRunModel body, String oldTestRunId) {
+        return createAndUpdateTestWithResponseAsync(testRunId, body, oldTestRunId)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Create and start a new test run with the given name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Load test run model.
+     * @param oldTestRunId Existing test run Id that should be rerun.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test run model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestRunModel> createAndUpdateTestAsync(
+            String testRunId, TestRunModel body, String oldTestRunId, Context context) {
+        return createAndUpdateTestWithResponseAsync(testRunId, body, oldTestRunId, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Create and start a new test run with the given name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Load test run model.
+     * @param oldTestRunId Existing test run Id that should be rerun.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test run model.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public TestRunModel createAndUpdateTest(String testRunId, TestRunModel body, String oldTestRunId) {
+        return createAndUpdateTestAsync(testRunId, body, oldTestRunId).block();
+    }
+
+    /**
+     * Create and start a new test run with the given name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Load test run model.
+     * @param oldTestRunId Existing test run Id that should be rerun.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return load test run model along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> createAndUpdateTestWithResponse(
-            String testRunId, BinaryData body, RequestOptions requestOptions) {
-        return createAndUpdateTestWithResponseAsync(testRunId, body, requestOptions).block();
+    public Response<TestRunModel> createAndUpdateTestWithResponse(
+            String testRunId, TestRunModel body, String oldTestRunId, Context context) {
+        return createAndUpdateTestWithResponseAsync(testRunId, body, oldTestRunId, context).block();
     }
 
     /**
      * Get test run details by name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     displayName: String (Optional)
-     *     testId: String (Optional)
-     *     resourceId: String (Optional)
-     *     description: String (Optional)
-     *     status: String (Optional)
-     *     startDateTime: OffsetDateTime (Optional)
-     *     endDateTime: OffsetDateTime (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     testResult: String (Optional)
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     testArtifacts (Optional): {
-     *         inputArtifacts (Required): {
-     *             configUrl (Optional): {
-     *                 url: String (Optional)
-     *                 fileId: String (Optional)
-     *                 filename: String (Optional)
-     *                 fileType: String(0/1/2) (Optional)
-     *                 expireTime: OffsetDateTime (Optional)
-     *                 validationStatus: String (Optional)
-     *             }
-     *             testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *             userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *             inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *             additionalUrls (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         outputArtifacts (Optional): {
-     *             resultUrl (Optional): (recursive schema, see resultUrl above)
-     *             logsUrl (Optional): (recursive schema, see logsUrl above)
-     *         }
-     *     }
-     *     executedDateTime: OffsetDateTime (Optional)
-     *     vusers: Integer (Optional)
-     *     testRunStatistics (Optional): {
-     *         String (Optional): {
-     *             transaction: String (Optional)
-     *             sampleCount: Double (Optional)
-     *             errorCount: Double (Optional)
-     *             errorPct: Double (Optional)
-     *             meanResTime: Double (Optional)
-     *             medianResTime: Double (Optional)
-     *             maxResTime: Double (Optional)
-     *             minResTime: Double (Optional)
-     *             pct1ResTime: Double (Optional)
-     *             pct2ResTime: Double (Optional)
-     *             pct3ResTime: Double (Optional)
-     *             throughput: Double (Optional)
-     *             receivedKBytesPerSec: Double (Optional)
-     *             sentKBytesPerSec: Double (Optional)
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     portalUrl: String (Optional)
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     duration: Long (Optional)
-     *     subnetId: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return test run details by name along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getTestRunWithResponseAsync(String testRunId, RequestOptions requestOptions) {
+    public Mono<Response<TestRunModel>> getTestRunWithResponseAsync(String testRunId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getTestRun(
-                                this.client.getEndpoint(),
-                                testRunId,
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Get test run details by name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     displayName: String (Optional)
-     *     testId: String (Optional)
-     *     resourceId: String (Optional)
-     *     description: String (Optional)
-     *     status: String (Optional)
-     *     startDateTime: OffsetDateTime (Optional)
-     *     endDateTime: OffsetDateTime (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     testResult: String (Optional)
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     testArtifacts (Optional): {
-     *         inputArtifacts (Required): {
-     *             configUrl (Optional): {
-     *                 url: String (Optional)
-     *                 fileId: String (Optional)
-     *                 filename: String (Optional)
-     *                 fileType: String(0/1/2) (Optional)
-     *                 expireTime: OffsetDateTime (Optional)
-     *                 validationStatus: String (Optional)
-     *             }
-     *             testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *             userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *             inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *             additionalUrls (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         outputArtifacts (Optional): {
-     *             resultUrl (Optional): (recursive schema, see resultUrl above)
-     *             logsUrl (Optional): (recursive schema, see logsUrl above)
-     *         }
-     *     }
-     *     executedDateTime: OffsetDateTime (Optional)
-     *     vusers: Integer (Optional)
-     *     testRunStatistics (Optional): {
-     *         String (Optional): {
-     *             transaction: String (Optional)
-     *             sampleCount: Double (Optional)
-     *             errorCount: Double (Optional)
-     *             errorPct: Double (Optional)
-     *             meanResTime: Double (Optional)
-     *             medianResTime: Double (Optional)
-     *             maxResTime: Double (Optional)
-     *             minResTime: Double (Optional)
-     *             pct1ResTime: Double (Optional)
-     *             pct2ResTime: Double (Optional)
-     *             pct3ResTime: Double (Optional)
-     *             throughput: Double (Optional)
-     *             receivedKBytesPerSec: Double (Optional)
-     *             sentKBytesPerSec: Double (Optional)
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     portalUrl: String (Optional)
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     duration: Long (Optional)
-     *     subnetId: String (Optional)
-     * }
-     * }</pre>
+     * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test run details by name along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<TestRunModel>> getTestRunWithResponseAsync(String testRunId, Context context) {
+        final String accept = "application/json";
+        return service.getTestRun(this.client.getEndpoint(), testRunId, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Get test run details by name.
      *
      * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test run details by name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestRunModel> getTestRunAsync(String testRunId) {
+        return getTestRunWithResponseAsync(testRunId).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get test run details by name.
+     *
+     * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test run details by name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestRunModel> getTestRunAsync(String testRunId, Context context) {
+        return getTestRunWithResponseAsync(testRunId, context).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get test run details by name.
+     *
+     * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test run details by name.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public TestRunModel getTestRun(String testRunId) {
+        return getTestRunAsync(testRunId).block();
+    }
+
+    /**
+     * Get test run details by name.
+     *
+     * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return test run details by name along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getTestRunWithResponse(String testRunId, RequestOptions requestOptions) {
-        return getTestRunWithResponseAsync(testRunId, requestOptions).block();
+    public Response<TestRunModel> getTestRunWithResponse(String testRunId, Context context) {
+        return getTestRunWithResponseAsync(testRunId, context).block();
     }
 
     /**
      * Get test run file by file name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     url: String (Optional)
-     *     fileId: String (Optional)
-     *     filename: String (Optional)
-     *     fileType: String(0/1/2) (Optional)
-     *     expireTime: OffsetDateTime (Optional)
-     *     validationStatus: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
      * @param fileId Unique identifier for test run file, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return test run file by file name along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getTestRunFileWithResponseAsync(
-            String testRunId, String fileId, RequestOptions requestOptions) {
+    public Mono<Response<FileUrl>> getTestRunFileWithResponseAsync(String testRunId, String fileId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
@@ -954,768 +470,644 @@ public final class TestRunsImpl {
                                 this.client.getEndpoint(),
                                 testRunId,
                                 fileId,
-                                this.client.getServiceVersion().getVersion(),
+                                this.client.getApiVersion(),
                                 accept,
-                                requestOptions,
                                 context));
     }
 
     /**
      * Get test run file by file name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     url: String (Optional)
-     *     fileId: String (Optional)
-     *     filename: String (Optional)
-     *     fileType: String(0/1/2) (Optional)
-     *     expireTime: OffsetDateTime (Optional)
-     *     validationStatus: String (Optional)
-     * }
-     * }</pre>
+     * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test run file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test run file by file name along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<FileUrl>> getTestRunFileWithResponseAsync(String testRunId, String fileId, Context context) {
+        final String accept = "application/json";
+        return service.getTestRunFile(
+                this.client.getEndpoint(), testRunId, fileId, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Get test run file by file name.
      *
      * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
      * @param fileId Unique identifier for test run file, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test run file by file name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrl> getTestRunFileAsync(String testRunId, String fileId) {
+        return getTestRunFileWithResponseAsync(testRunId, fileId).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get test run file by file name.
+     *
+     * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test run file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test run file by file name on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<FileUrl> getTestRunFileAsync(String testRunId, String fileId, Context context) {
+        return getTestRunFileWithResponseAsync(testRunId, fileId, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get test run file by file name.
+     *
+     * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test run file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return test run file by file name.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public FileUrl getTestRunFile(String testRunId, String fileId) {
+        return getTestRunFileAsync(testRunId, fileId).block();
+    }
+
+    /**
+     * Get test run file by file name.
+     *
+     * @param testRunId Unique name of load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param fileId Unique identifier for test run file, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return test run file by file name along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getTestRunFileWithResponse(
-            String testRunId, String fileId, RequestOptions requestOptions) {
-        return getTestRunFileWithResponseAsync(testRunId, fileId, requestOptions).block();
+    public Response<FileUrl> getTestRunFileWithResponse(String testRunId, String fileId, Context context) {
+        return getTestRunFileWithResponseAsync(testRunId, fileId, context).block();
     }
 
     /**
      * Get all test runs with given filters.
      *
-     * <p><strong>Query Parameters</strong>
-     *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>orderBy</td><td>String</td><td>No</td><td>Sort on one of the field - status, displayName, executedDateTime in (field asc/desc) format. eg: displayName asc.</td></tr>
-     *     <tr><td>continuationToken</td><td>String</td><td>No</td><td>Continuation token to get the next page of response.</td></tr>
-     *     <tr><td>search</td><td>String</td><td>No</td><td>Filter search based on searchable fields - description, executedUser.</td></tr>
-     *     <tr><td>executionFrom</td><td>OffsetDateTime</td><td>No</td><td>The end DateTime(ISO 8601 literal format) of test-run execution time filter range.</td></tr>
-     *     <tr><td>executionTo</td><td>OffsetDateTime</td><td>No</td><td>The start DateTime(ISO 8601 literal format) of test-run execution time filter range.</td></tr>
-     *     <tr><td>status</td><td>String</td><td>No</td><td>Comma separated list of test run status, value can be -  "ACCEPTED", "NOTSTARTED","PROVISIONING","PROVISIONED","CONFIGURING",
-     * "CONFIGURED","EXECUTING","EXECUTED","DEPROVISIONING","DEPROVISIONED","DONE","CANCELLED","FAILED".</td></tr>
-     *     <tr><td>maxPageSize</td><td>Integer</td><td>No</td><td>Number of results in response.</td></tr>
-     *     <tr><td>testId</td><td>String</td><td>No</td><td>Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.</td></tr>
-     * </table>
-     *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     value (Required): [
-     *          (Required){
-     *             testRunId: String (Optional)
-     *             displayName: String (Optional)
-     *             testId: String (Optional)
-     *             resourceId: String (Optional)
-     *             description: String (Optional)
-     *             status: String (Optional)
-     *             startDateTime: OffsetDateTime (Optional)
-     *             endDateTime: OffsetDateTime (Optional)
-     *             loadTestConfig (Optional): {
-     *                 engineInstances: Integer (Optional)
-     *                 splitAllCSVs: Boolean (Optional)
-     *             }
-     *             testResult: String (Optional)
-     *             passFailCriteria (Optional): {
-     *                 passFailMetrics (Optional): {
-     *                     String (Optional): {
-     *                         clientmetric: String (Optional)
-     *                         aggregate: String (Optional)
-     *                         condition: String (Optional)
-     *                         requestName: String (Optional)
-     *                         value: Double (Optional)
-     *                         action: String (Optional)
-     *                         actualValue: Double (Optional)
-     *                         result: String (Optional)
-     *                     }
-     *                 }
-     *             }
-     *             testArtifacts (Optional): {
-     *                 inputArtifacts (Required): {
-     *                     configUrl (Optional): {
-     *                         url: String (Optional)
-     *                         fileId: String (Optional)
-     *                         filename: String (Optional)
-     *                         fileType: String(0/1/2) (Optional)
-     *                         expireTime: OffsetDateTime (Optional)
-     *                         validationStatus: String (Optional)
-     *                     }
-     *                     testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *                     userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *                     inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *                     additionalUrls (Optional): [
-     *                         (recursive schema, see above)
-     *                     ]
-     *                 }
-     *                 outputArtifacts (Optional): {
-     *                     resultUrl (Optional): (recursive schema, see resultUrl above)
-     *                     logsUrl (Optional): (recursive schema, see logsUrl above)
-     *                 }
-     *             }
-     *             executedDateTime: OffsetDateTime (Optional)
-     *             vusers: Integer (Optional)
-     *             testRunStatistics (Optional): {
-     *                 String (Optional): {
-     *                     transaction: String (Optional)
-     *                     sampleCount: Double (Optional)
-     *                     errorCount: Double (Optional)
-     *                     errorPct: Double (Optional)
-     *                     meanResTime: Double (Optional)
-     *                     medianResTime: Double (Optional)
-     *                     maxResTime: Double (Optional)
-     *                     minResTime: Double (Optional)
-     *                     pct1ResTime: Double (Optional)
-     *                     pct2ResTime: Double (Optional)
-     *                     pct3ResTime: Double (Optional)
-     *                     throughput: Double (Optional)
-     *                     receivedKBytesPerSec: Double (Optional)
-     *                     sentKBytesPerSec: Double (Optional)
-     *                 }
-     *             }
-     *             createdDateTime: OffsetDateTime (Optional)
-     *             createdBy: String (Optional)
-     *             lastModifiedDateTime: OffsetDateTime (Optional)
-     *             lastModifiedBy: String (Optional)
-     *             portalUrl: String (Optional)
-     *             secrets (Optional): {
-     *                 String (Optional): {
-     *                     value: String (Optional)
-     *                     type: String (Optional)
-     *                 }
-     *             }
-     *             environmentVariables (Optional): {
-     *                 String: String (Optional)
-     *             }
-     *             duration: Long (Optional)
-     *             subnetId: String (Optional)
-     *         }
-     *     ]
-     *     nextLink: String (Optional)
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param orderBy Sort on one of the field - status, displayName, executedDateTime in (field asc/desc) format. eg:
+     *     displayName asc.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param search Filter search based on searchable fields - description, executedUser.
+     * @param executionFrom The end DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param executionTo The start DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param status Comma separated list of test run status, value can be - "ACCEPTED",
+     *     "NOTSTARTED","PROVISIONING","PROVISIONED","CONFIGURING",
+     *     "CONFIGURED","EXECUTING","EXECUTED","DEPROVISIONING","DEPROVISIONED","DONE","CANCELLED","FAILED".
+     * @param maxPageSize Number of results in response.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all test runs with given filters along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> listTestRunsSearchWithResponseAsync(RequestOptions requestOptions) {
+    public Mono<Response<TestRunModelResourceList>> listTestRunsSearchWithResponseAsync(
+            String orderBy,
+            String continuationToken,
+            String search,
+            OffsetDateTime executionFrom,
+            OffsetDateTime executionTo,
+            String status,
+            Integer maxPageSize,
+            String testId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.listTestRunsSearch(
                                 this.client.getEndpoint(),
-                                this.client.getServiceVersion().getVersion(),
+                                orderBy,
+                                continuationToken,
+                                search,
+                                executionFrom,
+                                executionTo,
+                                status,
+                                maxPageSize,
+                                this.client.getApiVersion(),
+                                testId,
                                 accept,
-                                requestOptions,
                                 context));
     }
 
     /**
      * Get all test runs with given filters.
      *
-     * <p><strong>Query Parameters</strong>
+     * @param orderBy Sort on one of the field - status, displayName, executedDateTime in (field asc/desc) format. eg:
+     *     displayName asc.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param search Filter search based on searchable fields - description, executedUser.
+     * @param executionFrom The end DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param executionTo The start DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param status Comma separated list of test run status, value can be - "ACCEPTED",
+     *     "NOTSTARTED","PROVISIONING","PROVISIONED","CONFIGURING",
+     *     "CONFIGURED","EXECUTING","EXECUTED","DEPROVISIONING","DEPROVISIONED","DONE","CANCELLED","FAILED".
+     * @param maxPageSize Number of results in response.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all test runs with given filters along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<TestRunModelResourceList>> listTestRunsSearchWithResponseAsync(
+            String orderBy,
+            String continuationToken,
+            String search,
+            OffsetDateTime executionFrom,
+            OffsetDateTime executionTo,
+            String status,
+            Integer maxPageSize,
+            String testId,
+            Context context) {
+        final String accept = "application/json";
+        return service.listTestRunsSearch(
+                this.client.getEndpoint(),
+                orderBy,
+                continuationToken,
+                search,
+                executionFrom,
+                executionTo,
+                status,
+                maxPageSize,
+                this.client.getApiVersion(),
+                testId,
+                accept,
+                context);
+    }
+
+    /**
+     * Get all test runs with given filters.
      *
-     * <table border="1">
-     *     <caption>Query Parameters</caption>
-     *     <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-     *     <tr><td>orderBy</td><td>String</td><td>No</td><td>Sort on one of the field - status, displayName, executedDateTime in (field asc/desc) format. eg: displayName asc.</td></tr>
-     *     <tr><td>continuationToken</td><td>String</td><td>No</td><td>Continuation token to get the next page of response.</td></tr>
-     *     <tr><td>search</td><td>String</td><td>No</td><td>Filter search based on searchable fields - description, executedUser.</td></tr>
-     *     <tr><td>executionFrom</td><td>OffsetDateTime</td><td>No</td><td>The end DateTime(ISO 8601 literal format) of test-run execution time filter range.</td></tr>
-     *     <tr><td>executionTo</td><td>OffsetDateTime</td><td>No</td><td>The start DateTime(ISO 8601 literal format) of test-run execution time filter range.</td></tr>
-     *     <tr><td>status</td><td>String</td><td>No</td><td>Comma separated list of test run status, value can be -  "ACCEPTED", "NOTSTARTED","PROVISIONING","PROVISIONED","CONFIGURING",
-     * "CONFIGURED","EXECUTING","EXECUTED","DEPROVISIONING","DEPROVISIONED","DONE","CANCELLED","FAILED".</td></tr>
-     *     <tr><td>maxPageSize</td><td>Integer</td><td>No</td><td>Number of results in response.</td></tr>
-     *     <tr><td>testId</td><td>String</td><td>No</td><td>Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.</td></tr>
-     * </table>
+     * @param orderBy Sort on one of the field - status, displayName, executedDateTime in (field asc/desc) format. eg:
+     *     displayName asc.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param search Filter search based on searchable fields - description, executedUser.
+     * @param executionFrom The end DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param executionTo The start DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param status Comma separated list of test run status, value can be - "ACCEPTED",
+     *     "NOTSTARTED","PROVISIONING","PROVISIONED","CONFIGURING",
+     *     "CONFIGURED","EXECUTING","EXECUTED","DEPROVISIONING","DEPROVISIONED","DONE","CANCELLED","FAILED".
+     * @param maxPageSize Number of results in response.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all test runs with given filters on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestRunModelResourceList> listTestRunsSearchAsync(
+            String orderBy,
+            String continuationToken,
+            String search,
+            OffsetDateTime executionFrom,
+            OffsetDateTime executionTo,
+            String status,
+            Integer maxPageSize,
+            String testId) {
+        return listTestRunsSearchWithResponseAsync(
+                        orderBy, continuationToken, search, executionFrom, executionTo, status, maxPageSize, testId)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all test runs with given filters.
      *
-     * You can add these to a request with {@link RequestOptions#addQueryParam}
+     * @param orderBy Sort on one of the field - status, displayName, executedDateTime in (field asc/desc) format. eg:
+     *     displayName asc.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param search Filter search based on searchable fields - description, executedUser.
+     * @param executionFrom The end DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param executionTo The start DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param status Comma separated list of test run status, value can be - "ACCEPTED",
+     *     "NOTSTARTED","PROVISIONING","PROVISIONED","CONFIGURING",
+     *     "CONFIGURED","EXECUTING","EXECUTED","DEPROVISIONING","DEPROVISIONED","DONE","CANCELLED","FAILED".
+     * @param maxPageSize Number of results in response.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all test runs with given filters on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestRunModelResourceList> listTestRunsSearchAsync(
+            String orderBy,
+            String continuationToken,
+            String search,
+            OffsetDateTime executionFrom,
+            OffsetDateTime executionTo,
+            String status,
+            Integer maxPageSize,
+            String testId,
+            Context context) {
+        return listTestRunsSearchWithResponseAsync(
+                        orderBy,
+                        continuationToken,
+                        search,
+                        executionFrom,
+                        executionTo,
+                        status,
+                        maxPageSize,
+                        testId,
+                        context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all test runs with given filters.
      *
-     * <p><strong>Response Body Schema</strong>
+     * @param orderBy Sort on one of the field - status, displayName, executedDateTime in (field asc/desc) format. eg:
+     *     displayName asc.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param search Filter search based on searchable fields - description, executedUser.
+     * @param executionFrom The end DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param executionTo The start DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param status Comma separated list of test run status, value can be - "ACCEPTED",
+     *     "NOTSTARTED","PROVISIONING","PROVISIONED","CONFIGURING",
+     *     "CONFIGURED","EXECUTING","EXECUTED","DEPROVISIONING","DEPROVISIONED","DONE","CANCELLED","FAILED".
+     * @param maxPageSize Number of results in response.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all test runs with given filters.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public TestRunModelResourceList listTestRunsSearch(
+            String orderBy,
+            String continuationToken,
+            String search,
+            OffsetDateTime executionFrom,
+            OffsetDateTime executionTo,
+            String status,
+            Integer maxPageSize,
+            String testId) {
+        return listTestRunsSearchAsync(
+                        orderBy, continuationToken, search, executionFrom, executionTo, status, maxPageSize, testId)
+                .block();
+    }
+
+    /**
+     * Get all test runs with given filters.
      *
-     * <pre>{@code
-     * {
-     *     value (Required): [
-     *          (Required){
-     *             testRunId: String (Optional)
-     *             displayName: String (Optional)
-     *             testId: String (Optional)
-     *             resourceId: String (Optional)
-     *             description: String (Optional)
-     *             status: String (Optional)
-     *             startDateTime: OffsetDateTime (Optional)
-     *             endDateTime: OffsetDateTime (Optional)
-     *             loadTestConfig (Optional): {
-     *                 engineInstances: Integer (Optional)
-     *                 splitAllCSVs: Boolean (Optional)
-     *             }
-     *             testResult: String (Optional)
-     *             passFailCriteria (Optional): {
-     *                 passFailMetrics (Optional): {
-     *                     String (Optional): {
-     *                         clientmetric: String (Optional)
-     *                         aggregate: String (Optional)
-     *                         condition: String (Optional)
-     *                         requestName: String (Optional)
-     *                         value: Double (Optional)
-     *                         action: String (Optional)
-     *                         actualValue: Double (Optional)
-     *                         result: String (Optional)
-     *                     }
-     *                 }
-     *             }
-     *             testArtifacts (Optional): {
-     *                 inputArtifacts (Required): {
-     *                     configUrl (Optional): {
-     *                         url: String (Optional)
-     *                         fileId: String (Optional)
-     *                         filename: String (Optional)
-     *                         fileType: String(0/1/2) (Optional)
-     *                         expireTime: OffsetDateTime (Optional)
-     *                         validationStatus: String (Optional)
-     *                     }
-     *                     testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *                     userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *                     inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *                     additionalUrls (Optional): [
-     *                         (recursive schema, see above)
-     *                     ]
-     *                 }
-     *                 outputArtifacts (Optional): {
-     *                     resultUrl (Optional): (recursive schema, see resultUrl above)
-     *                     logsUrl (Optional): (recursive schema, see logsUrl above)
-     *                 }
-     *             }
-     *             executedDateTime: OffsetDateTime (Optional)
-     *             vusers: Integer (Optional)
-     *             testRunStatistics (Optional): {
-     *                 String (Optional): {
-     *                     transaction: String (Optional)
-     *                     sampleCount: Double (Optional)
-     *                     errorCount: Double (Optional)
-     *                     errorPct: Double (Optional)
-     *                     meanResTime: Double (Optional)
-     *                     medianResTime: Double (Optional)
-     *                     maxResTime: Double (Optional)
-     *                     minResTime: Double (Optional)
-     *                     pct1ResTime: Double (Optional)
-     *                     pct2ResTime: Double (Optional)
-     *                     pct3ResTime: Double (Optional)
-     *                     throughput: Double (Optional)
-     *                     receivedKBytesPerSec: Double (Optional)
-     *                     sentKBytesPerSec: Double (Optional)
-     *                 }
-     *             }
-     *             createdDateTime: OffsetDateTime (Optional)
-     *             createdBy: String (Optional)
-     *             lastModifiedDateTime: OffsetDateTime (Optional)
-     *             lastModifiedBy: String (Optional)
-     *             portalUrl: String (Optional)
-     *             secrets (Optional): {
-     *                 String (Optional): {
-     *                     value: String (Optional)
-     *                     type: String (Optional)
-     *                 }
-     *             }
-     *             environmentVariables (Optional): {
-     *                 String: String (Optional)
-     *             }
-     *             duration: Long (Optional)
-     *             subnetId: String (Optional)
-     *         }
-     *     ]
-     *     nextLink: String (Optional)
-     * }
-     * }</pre>
-     *
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @param orderBy Sort on one of the field - status, displayName, executedDateTime in (field asc/desc) format. eg:
+     *     displayName asc.
+     * @param continuationToken Continuation token to get the next page of response.
+     * @param search Filter search based on searchable fields - description, executedUser.
+     * @param executionFrom The end DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param executionTo The start DateTime(ISO 8601 literal format) of test-run execution time filter range.
+     * @param status Comma separated list of test run status, value can be - "ACCEPTED",
+     *     "NOTSTARTED","PROVISIONING","PROVISIONED","CONFIGURING",
+     *     "CONFIGURED","EXECUTING","EXECUTED","DEPROVISIONING","DEPROVISIONED","DONE","CANCELLED","FAILED".
+     * @param maxPageSize Number of results in response.
+     * @param testId Unique name for load test, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all test runs with given filters along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> listTestRunsSearchWithResponse(RequestOptions requestOptions) {
-        return listTestRunsSearchWithResponseAsync(requestOptions).block();
+    public Response<TestRunModelResourceList> listTestRunsSearchWithResponse(
+            String orderBy,
+            String continuationToken,
+            String search,
+            OffsetDateTime executionFrom,
+            OffsetDateTime executionTo,
+            String status,
+            Integer maxPageSize,
+            String testId,
+            Context context) {
+        return listTestRunsSearchWithResponseAsync(
+                        orderBy,
+                        continuationToken,
+                        search,
+                        executionFrom,
+                        executionTo,
+                        status,
+                        maxPageSize,
+                        testId,
+                        context)
+                .block();
     }
 
     /**
      * Stop test run by name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     displayName: String (Optional)
-     *     testId: String (Optional)
-     *     resourceId: String (Optional)
-     *     description: String (Optional)
-     *     status: String (Optional)
-     *     startDateTime: OffsetDateTime (Optional)
-     *     endDateTime: OffsetDateTime (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     testResult: String (Optional)
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     testArtifacts (Optional): {
-     *         inputArtifacts (Required): {
-     *             configUrl (Optional): {
-     *                 url: String (Optional)
-     *                 fileId: String (Optional)
-     *                 filename: String (Optional)
-     *                 fileType: String(0/1/2) (Optional)
-     *                 expireTime: OffsetDateTime (Optional)
-     *                 validationStatus: String (Optional)
-     *             }
-     *             testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *             userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *             inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *             additionalUrls (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         outputArtifacts (Optional): {
-     *             resultUrl (Optional): (recursive schema, see resultUrl above)
-     *             logsUrl (Optional): (recursive schema, see logsUrl above)
-     *         }
-     *     }
-     *     executedDateTime: OffsetDateTime (Optional)
-     *     vusers: Integer (Optional)
-     *     testRunStatistics (Optional): {
-     *         String (Optional): {
-     *             transaction: String (Optional)
-     *             sampleCount: Double (Optional)
-     *             errorCount: Double (Optional)
-     *             errorPct: Double (Optional)
-     *             meanResTime: Double (Optional)
-     *             medianResTime: Double (Optional)
-     *             maxResTime: Double (Optional)
-     *             minResTime: Double (Optional)
-     *             pct1ResTime: Double (Optional)
-     *             pct2ResTime: Double (Optional)
-     *             pct3ResTime: Double (Optional)
-     *             throughput: Double (Optional)
-     *             receivedKBytesPerSec: Double (Optional)
-     *             sentKBytesPerSec: Double (Optional)
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     portalUrl: String (Optional)
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     duration: Long (Optional)
-     *     subnetId: String (Optional)
-     * }
-     * }</pre>
-     *
      * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return load test run model along with {@link Response} on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> stopTestRunWithResponseAsync(String testRunId, RequestOptions requestOptions) {
+    public Mono<Response<TestRunModel>> stopTestRunWithResponseAsync(String testRunId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.stopTestRun(
-                                this.client.getEndpoint(),
-                                testRunId,
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Stop test run by name.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     displayName: String (Optional)
-     *     testId: String (Optional)
-     *     resourceId: String (Optional)
-     *     description: String (Optional)
-     *     status: String (Optional)
-     *     startDateTime: OffsetDateTime (Optional)
-     *     endDateTime: OffsetDateTime (Optional)
-     *     loadTestConfig (Optional): {
-     *         engineInstances: Integer (Optional)
-     *         splitAllCSVs: Boolean (Optional)
-     *     }
-     *     testResult: String (Optional)
-     *     passFailCriteria (Optional): {
-     *         passFailMetrics (Optional): {
-     *             String (Optional): {
-     *                 clientmetric: String (Optional)
-     *                 aggregate: String (Optional)
-     *                 condition: String (Optional)
-     *                 requestName: String (Optional)
-     *                 value: Double (Optional)
-     *                 action: String (Optional)
-     *                 actualValue: Double (Optional)
-     *                 result: String (Optional)
-     *             }
-     *         }
-     *     }
-     *     testArtifacts (Optional): {
-     *         inputArtifacts (Required): {
-     *             configUrl (Optional): {
-     *                 url: String (Optional)
-     *                 fileId: String (Optional)
-     *                 filename: String (Optional)
-     *                 fileType: String(0/1/2) (Optional)
-     *                 expireTime: OffsetDateTime (Optional)
-     *                 validationStatus: String (Optional)
-     *             }
-     *             testScriptUrl (Optional): (recursive schema, see testScriptUrl above)
-     *             userPropUrl (Optional): (recursive schema, see userPropUrl above)
-     *             inputArtifactsZipFileurl (Optional): (recursive schema, see inputArtifactsZipFileurl above)
-     *             additionalUrls (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         outputArtifacts (Optional): {
-     *             resultUrl (Optional): (recursive schema, see resultUrl above)
-     *             logsUrl (Optional): (recursive schema, see logsUrl above)
-     *         }
-     *     }
-     *     executedDateTime: OffsetDateTime (Optional)
-     *     vusers: Integer (Optional)
-     *     testRunStatistics (Optional): {
-     *         String (Optional): {
-     *             transaction: String (Optional)
-     *             sampleCount: Double (Optional)
-     *             errorCount: Double (Optional)
-     *             errorPct: Double (Optional)
-     *             meanResTime: Double (Optional)
-     *             medianResTime: Double (Optional)
-     *             maxResTime: Double (Optional)
-     *             minResTime: Double (Optional)
-     *             pct1ResTime: Double (Optional)
-     *             pct2ResTime: Double (Optional)
-     *             pct3ResTime: Double (Optional)
-     *             throughput: Double (Optional)
-     *             receivedKBytesPerSec: Double (Optional)
-     *             sentKBytesPerSec: Double (Optional)
-     *         }
-     *     }
-     *     createdDateTime: OffsetDateTime (Optional)
-     *     createdBy: String (Optional)
-     *     lastModifiedDateTime: OffsetDateTime (Optional)
-     *     lastModifiedBy: String (Optional)
-     *     portalUrl: String (Optional)
-     *     secrets (Optional): {
-     *         String (Optional): {
-     *             value: String (Optional)
-     *             type: String (Optional)
-     *         }
-     *     }
-     *     environmentVariables (Optional): {
-     *         String: String (Optional)
-     *     }
-     *     duration: Long (Optional)
-     *     subnetId: String (Optional)
-     * }
-     * }</pre>
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test run model along with {@link Response} on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<TestRunModel>> stopTestRunWithResponseAsync(String testRunId, Context context) {
+        final String accept = "application/json";
+        return service.stopTestRun(this.client.getEndpoint(), testRunId, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Stop test run by name.
      *
      * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test run model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestRunModel> stopTestRunAsync(String testRunId) {
+        return stopTestRunWithResponseAsync(testRunId).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Stop test run by name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test run model on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<TestRunModel> stopTestRunAsync(String testRunId, Context context) {
+        return stopTestRunWithResponseAsync(testRunId, context).flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Stop test run by name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return load test run model.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public TestRunModel stopTestRun(String testRunId) {
+        return stopTestRunAsync(testRunId).block();
+    }
+
+    /**
+     * Stop test run by name.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return load test run model along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> stopTestRunWithResponse(String testRunId, RequestOptions requestOptions) {
-        return stopTestRunWithResponseAsync(testRunId, requestOptions).block();
+    public Response<TestRunModel> stopTestRunWithResponse(String testRunId, Context context) {
+        return stopTestRunWithResponseAsync(testRunId, context).block();
     }
 
     /**
      * Get all client metrics for a load test run.
      *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     requestSamplers (Optional): [
-     *         String (Optional)
-     *     ]
-     *     errors (Optional): [
-     *         String (Optional)
-     *     ]
-     *     percentiles (Optional): [
-     *         String (Optional)
-     *     ]
-     *     groupByInterval: String (Optional)
-     *     startTime: OffsetDateTime (Required)
-     *     endTime: OffsetDateTime (Required)
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     timeSeries (Optional): {
-     *         activeUsers (Optional): {
-     *             String (Optional): [
-     *                  (Optional){
-     *                     timestamp: OffsetDateTime (Optional)
-     *                     value: Double (Optional)
-     *                 }
-     *             ]
-     *         }
-     *         responseTime (Optional): {
-     *             String (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         throughput (Optional): {
-     *             String (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         errors (Optional): {
-     *             String (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *     }
-     * }
-     * }</pre>
-     *
      * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body Client metrics request model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all client metrics for a load test run along with {@link Response} on successful completion of {@link
      *     Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getTestRunClientMetricsWithResponseAsync(
-            String testRunId, BinaryData body, RequestOptions requestOptions) {
+    public Mono<Response<ClientMetricsResults>> getTestRunClientMetricsWithResponseAsync(
+            String testRunId, ClientMetricsRequestModel body) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getTestRunClientMetrics(
                                 this.client.getEndpoint(),
                                 testRunId,
-                                this.client.getServiceVersion().getVersion(),
+                                this.client.getApiVersion(),
                                 body,
                                 accept,
-                                requestOptions,
                                 context));
     }
 
     /**
      * Get all client metrics for a load test run.
      *
-     * <p><strong>Request Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     requestSamplers (Optional): [
-     *         String (Optional)
-     *     ]
-     *     errors (Optional): [
-     *         String (Optional)
-     *     ]
-     *     percentiles (Optional): [
-     *         String (Optional)
-     *     ]
-     *     groupByInterval: String (Optional)
-     *     startTime: OffsetDateTime (Required)
-     *     endTime: OffsetDateTime (Required)
-     * }
-     * }</pre>
-     *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     timeSeries (Optional): {
-     *         activeUsers (Optional): {
-     *             String (Optional): [
-     *                  (Optional){
-     *                     timestamp: OffsetDateTime (Optional)
-     *                     value: Double (Optional)
-     *                 }
-     *             ]
-     *         }
-     *         responseTime (Optional): {
-     *             String (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         throughput (Optional): {
-     *             String (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *         errors (Optional): {
-     *             String (Optional): [
-     *                 (recursive schema, see above)
-     *             ]
-     *         }
-     *     }
-     * }
-     * }</pre>
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Client metrics request model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all client metrics for a load test run along with {@link Response} on successful completion of {@link
+     *     Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<ClientMetricsResults>> getTestRunClientMetricsWithResponseAsync(
+            String testRunId, ClientMetricsRequestModel body, Context context) {
+        final String accept = "application/json";
+        return service.getTestRunClientMetrics(
+                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), body, accept, context);
+    }
+
+    /**
+     * Get all client metrics for a load test run.
      *
      * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
      * @param body Client metrics request model.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all client metrics for a load test run on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ClientMetricsResults> getTestRunClientMetricsAsync(String testRunId, ClientMetricsRequestModel body) {
+        return getTestRunClientMetricsWithResponseAsync(testRunId, body)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all client metrics for a load test run.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Client metrics request model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all client metrics for a load test run on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ClientMetricsResults> getTestRunClientMetricsAsync(
+            String testRunId, ClientMetricsRequestModel body, Context context) {
+        return getTestRunClientMetricsWithResponseAsync(testRunId, body, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all client metrics for a load test run.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Client metrics request model.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all client metrics for a load test run.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public ClientMetricsResults getTestRunClientMetrics(String testRunId, ClientMetricsRequestModel body) {
+        return getTestRunClientMetricsAsync(testRunId, body).block();
+    }
+
+    /**
+     * Get all client metrics for a load test run.
+     *
+     * @param testRunId Unique name of the load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param body Client metrics request model.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all client metrics for a load test run along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getTestRunClientMetricsWithResponse(
-            String testRunId, BinaryData body, RequestOptions requestOptions) {
-        return getTestRunClientMetricsWithResponseAsync(testRunId, body, requestOptions).block();
+    public Response<ClientMetricsResults> getTestRunClientMetricsWithResponse(
+            String testRunId, ClientMetricsRequestModel body, Context context) {
+        return getTestRunClientMetricsWithResponseAsync(testRunId, body, context).block();
     }
 
     /**
      * Get all filters that are supported for client metrics for a given load test run.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     filters (Optional): {
-     *         requestSamplerValues (Optional): [
-     *             String (Optional)
-     *         ]
-     *         errorFiltersValues (Optional): [
-     *             String (Optional)
-     *         ]
-     *     }
-     *     timeRange (Optional): {
-     *         startTime: OffsetDateTime (Optional)
-     *         endTime: OffsetDateTime (Optional)
-     *     }
-     * }
-     * }</pre>
-     *
      * @param testRunId Unique name for load test run, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all filters that are supported for client metrics for a given load test run along with {@link Response}
      *     on successful completion of {@link Mono}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Mono<Response<BinaryData>> getTestRunClientMetricsFiltersWithResponseAsync(
-            String testRunId, RequestOptions requestOptions) {
+    public Mono<Response<ClientMetricsFilters>> getTestRunClientMetricsFiltersWithResponseAsync(String testRunId) {
         final String accept = "application/json";
         return FluxUtil.withContext(
                 context ->
                         service.getTestRunClientMetricsFilters(
-                                this.client.getEndpoint(),
-                                testRunId,
-                                this.client.getServiceVersion().getVersion(),
-                                accept,
-                                requestOptions,
-                                context));
+                                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), accept, context));
     }
 
     /**
      * Get all filters that are supported for client metrics for a given load test run.
      *
-     * <p><strong>Response Body Schema</strong>
-     *
-     * <pre>{@code
-     * {
-     *     testRunId: String (Optional)
-     *     filters (Optional): {
-     *         requestSamplerValues (Optional): [
-     *             String (Optional)
-     *         ]
-     *         errorFiltersValues (Optional): [
-     *             String (Optional)
-     *         ]
-     *     }
-     *     timeRange (Optional): {
-     *         startTime: OffsetDateTime (Optional)
-     *         endTime: OffsetDateTime (Optional)
-     *     }
-     * }
-     * }</pre>
+     * @param testRunId Unique name for load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all filters that are supported for client metrics for a given load test run along with {@link Response}
+     *     on successful completion of {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<Response<ClientMetricsFilters>> getTestRunClientMetricsFiltersWithResponseAsync(
+            String testRunId, Context context) {
+        final String accept = "application/json";
+        return service.getTestRunClientMetricsFilters(
+                this.client.getEndpoint(), testRunId, this.client.getApiVersion(), accept, context);
+    }
+
+    /**
+     * Get all filters that are supported for client metrics for a given load test run.
      *
      * @param testRunId Unique name for load test run, must be a valid URL character ^[a-z0-9_-]*$.
-     * @param requestOptions The options to configure the HTTP request before HTTP client sends it.
-     * @throws HttpResponseException thrown if the request is rejected by server.
-     * @throws ClientAuthenticationException thrown if the request is rejected by server on status code 401.
-     * @throws ResourceNotFoundException thrown if the request is rejected by server on status code 404.
-     * @throws ResourceModifiedException thrown if the request is rejected by server on status code 409.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all filters that are supported for client metrics for a given load test run on successful completion of
+     *     {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ClientMetricsFilters> getTestRunClientMetricsFiltersAsync(String testRunId) {
+        return getTestRunClientMetricsFiltersWithResponseAsync(testRunId)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all filters that are supported for client metrics for a given load test run.
+     *
+     * @param testRunId Unique name for load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all filters that are supported for client metrics for a given load test run on successful completion of
+     *     {@link Mono}.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public Mono<ClientMetricsFilters> getTestRunClientMetricsFiltersAsync(String testRunId, Context context) {
+        return getTestRunClientMetricsFiltersWithResponseAsync(testRunId, context)
+                .flatMap(res -> Mono.justOrEmpty(res.getValue()));
+    }
+
+    /**
+     * Get all filters that are supported for client metrics for a given load test run.
+     *
+     * @param testRunId Unique name for load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
+     * @return all filters that are supported for client metrics for a given load test run.
+     */
+    @ServiceMethod(returns = ReturnType.SINGLE)
+    public ClientMetricsFilters getTestRunClientMetricsFilters(String testRunId) {
+        return getTestRunClientMetricsFiltersAsync(testRunId).block();
+    }
+
+    /**
+     * Get all filters that are supported for client metrics for a given load test run.
+     *
+     * @param testRunId Unique name for load test run, must be a valid URL character ^[a-z0-9_-]*$.
+     * @param context The context to associate with this operation.
+     * @throws IllegalArgumentException thrown if parameters fail the validation.
+     * @throws ErrorResponseBodyException thrown if the request is rejected by server.
+     * @throws RuntimeException all other wrapped checked exceptions if the request fails to be sent.
      * @return all filters that are supported for client metrics for a given load test run along with {@link Response}.
      */
     @ServiceMethod(returns = ReturnType.SINGLE)
-    public Response<BinaryData> getTestRunClientMetricsFiltersWithResponse(
-            String testRunId, RequestOptions requestOptions) {
-        return getTestRunClientMetricsFiltersWithResponseAsync(testRunId, requestOptions).block();
+    public Response<ClientMetricsFilters> getTestRunClientMetricsFiltersWithResponse(
+            String testRunId, Context context) {
+        return getTestRunClientMetricsFiltersWithResponseAsync(testRunId, context).block();
     }
 }
